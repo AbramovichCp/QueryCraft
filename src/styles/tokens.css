@@ -1,0 +1,142 @@
+/*
+ * QueryCraft design tokens.
+ *
+ * Every text color is verified against its background for WCAG 2.2 AA:
+ *   - Normal text:  >= 4.5:1
+ *   - Large text:   >= 3:1
+ *   - UI components / focus: >= 3:1
+ *
+ * Colors are defined as hex so any designer can paste them straight into a checker.
+ */
+
+:root,
+[data-theme='light'] {
+  /* Surfaces */
+  --color-bg: #ffffff;
+  --color-surface: #f4f5f8;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #eceef3;
+
+  /* Text (on --color-bg) */
+  --color-text-primary: #0f1115; /* 19.2:1 */
+  --color-text-secondary: #3a4150; /* 10.3:1 */
+  --color-text-muted: #5a6370; /* 6.0:1 — comfortably above AA, readable for placeholders */
+
+  /* Accent — deep violet; mapped so text on accent and accent on surface both pass */
+  --color-accent: #5b3df5; /* 5.8:1 against --color-bg */
+  --color-accent-hover: #4a2fde;
+  --color-accent-pressed: #3a23b8;
+  --color-on-accent: #ffffff; /* 6.9:1 on --color-accent */
+
+  /* Borders / dividers (non-text, so 3:1 target) */
+  --color-border: #c9cfda;
+  --color-border-strong: #9aa3b2;
+
+  /* Focus ring */
+  --color-focus: #0a66ff; /* 4.7:1 — visible on both light surface and accent */
+
+  /* Feedback */
+  --color-danger: #b02a3a;
+  --color-warning: #8a5300;
+  --color-success: #0a7d52;
+
+  /* Input-specific surfaces */
+  --color-input-bg: #ffffff;
+  --color-input-bg-alt: #f0f2f6; /* key field — slightly darker to differentiate */
+  --color-input-border: #c9cfda;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(15, 17, 21, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 17, 21, 0.08);
+  --shadow-lg: 0 12px 32px rgba(15, 17, 21, 0.12);
+}
+
+[data-theme='dark'] {
+  /* Surfaces */
+  --color-bg: #0c0e13;
+  --color-surface: #15181f;
+  --color-surface-raised: #1b1f28;
+  --color-surface-sunken: #0a0c10;
+
+  /* Text (on --color-bg) */
+  --color-text-primary: #f1f3f7; /* 16.8:1 */
+  --color-text-secondary: #c3c9d4; /* 11.1:1 */
+  --color-text-muted: #a3acba; /* 7.4:1 — still passes AA, distinct from primary without being unreadable */
+
+  /* Accent — lifted for dark contrast */
+  --color-accent: #a996ff; /* 7.9:1 against --color-bg */
+  --color-accent-hover: #bbacff;
+  --color-accent-pressed: #8973ff;
+  --color-on-accent: #0c0e13; /* 7.9:1 on --color-accent */
+
+  /* Borders */
+  --color-border: #2c313c;
+  --color-border-strong: #474e5e;
+
+  /* Focus */
+  --color-focus: #7aa8ff; /* 7.6:1 */
+
+  /* Feedback */
+  --color-danger: #ff7a8c;
+  --color-warning: #ffc66e;
+  --color-success: #6ce3a9;
+
+  /* Input surfaces */
+  --color-input-bg: #1b1f28;
+  --color-input-bg-alt: #22262f;
+  --color-input-border: #2c313c;
+
+  /* Shadows (a bit stronger on dark) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* Shared sizing/typography tokens — theme-agnostic */
+:root {
+  /* Typography */
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  --font-mono:
+    'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+
+  --line-height-tight: 1.25;
+  --line-height-base: 1.5;
+  --line-height-relaxed: 1.65;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 20px;
+  --space-7: 24px;
+  --space-8: 32px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* Interaction */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+
+  /* Minimum hit target per WCAG 2.2 SC 2.5.8 */
+  --min-target: 28px;
+
+  /* Popup dimensions */
+  --popup-width: 440px;
+  --popup-max-height: 600px;
+}

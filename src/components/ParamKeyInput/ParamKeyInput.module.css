@@ -1,0 +1,23 @@
+.input {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--color-input-bg-alt);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  line-height: var(--line-height-tight);
+  min-height: var(--min-target);
+  transition: border-color var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.input:hover {
+  border-color: var(--color-border-strong);
+}

@@ -1,0 +1,30 @@
+.row {
+  display: grid;
+  grid-template-columns: 140px 1fr var(--min-target);
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  margin-top: var(--space-2);
+  border-top: 1px dashed var(--color-border);
+  padding-top: var(--space-4);
+}
+
+.keyCell {
+  min-width: 0;
+}
+
+.valueCell {
+  min-width: 0;
+}
+
+.actionCell {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+@media (max-width: 400px) {
+  .row {
+    grid-template-columns: 110px 1fr var(--min-target);
+  }
+}

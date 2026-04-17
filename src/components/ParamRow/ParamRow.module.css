@@ -1,0 +1,30 @@
+.row {
+  display: grid;
+  /* Strict columns so every row aligns identically regardless of content length. */
+  grid-template-columns: 140px 1fr var(--min-target);
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+  list-style: none;
+}
+
+.keyCell {
+  min-width: 0;
+}
+
+.valueCell {
+  min-width: 0;
+}
+
+.removeCell {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Narrow view fallback — if the popup ever renders below 420px (unlikely) */
+@media (max-width: 400px) {
+  .row {
+    grid-template-columns: 110px 1fr var(--min-target);
+  }
+}

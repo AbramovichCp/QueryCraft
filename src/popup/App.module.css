@@ -1,0 +1,20 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  width: var(--popup-width);
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+.scrollArea {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.previewWrap {
+  padding-top: var(--space-4);
+}
