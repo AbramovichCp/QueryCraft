@@ -20,6 +20,8 @@ interface AppState {
   setTabState: (state: TabLoadState) => void;
   loadUrl: (url: string, tabId: number) => void;
   loadUnsupported: (reason: string) => void;
+  /** Update currentParsed from a raw URL string (used by the editable URL field). */
+  setCurrentUrl: (rawUrl: string) => void;
   updateParamKey: (id: string, key: string) => void;
   updateParamValue: (id: string, value: string) => void;
   toggleBooleanParam: (id: string) => void;
@@ -50,10 +52,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         tabState: { status: 'ready', tabId, url },
         initialParsed: parsed,
         // Clone so edits to currentParsed don't mutate the initial snapshot.
-        currentParsed: {
-          ...parsed,
-          params: parsed.params.map((p) => ({ ...p })),
-        },
+        currentParsed: { ...parsed, params: parsed.params.map((p) => ({ ...p })) },
       });
     } catch (err) {
       set({
@@ -66,6 +65,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   loadUnsupported: (reason) => set({ tabState: { status: 'unsupported', reason } }),
+
+  setCurrentUrl: (rawUrl) => {
+    try {
+      const parsed = parseUrl(rawUrl);
+      set({ currentParsed: { ...parsed, params: parsed.params.map((p) => ({ ...p })) } });
+    } catch {
+      // Invalid URL while the user is still typing — ignore silently.
+    }
+  },
 
   updateParamKey: (id, key) => {
     const state = get();

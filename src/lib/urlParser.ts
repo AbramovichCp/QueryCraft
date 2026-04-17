@@ -23,11 +23,23 @@ export function parseUrl(rawUrl: string): ParsedUrl {
   const url = new URL(rawUrl); // throws TypeError on invalid input
 
   const base = `${url.origin}${url.pathname}`;
-  const fragment = url.hash; // includes "#" or ""
-
   const params: QueryParam[] = [];
-  // Iterate on the raw search string (minus "?") so we preserve order AND duplicates.
-  // URLSearchParams iteration works in insertion order too, but using entries() is cleaner.
+
+  // Hash-router pattern: query params live inside the hash fragment.
+  // e.g. https://app.com/#/route?foo=bar  →  hash = "#/route?foo=bar"
+  if (url.hash && url.hash.includes('?')) {
+    const qIdx = url.hash.indexOf('?');
+    const hashPath = url.hash.slice(0, qIdx); // e.g. "#/route"
+    const hashSearch = url.hash.slice(qIdx + 1); // e.g. "foo=bar&baz=qux"
+
+    for (const [key, value] of new URLSearchParams(hashSearch).entries()) {
+      params.push({ id: generateId(), key, value, type: detectParamType(value) });
+    }
+
+    return { base, params, fragment: hashPath, hashQuery: true };
+  }
+
+  // Regular query params.
   for (const [key, value] of url.searchParams.entries()) {
     params.push({
       id: generateId(),
@@ -37,23 +49,40 @@ export function parseUrl(rawUrl: string): ParsedUrl {
     });
   }
 
-  return { base, params, fragment };
+  return { base, params, fragment: url.hash, hashQuery: false };
 }
 
 /**
- * Serialize the editable shape back into a URL string. Values are percent-encoded
- * via URLSearchParams; keys are also encoded (so `filters[category]` becomes
- * `filters%5Bcategory%5D` which is the correct wire format and decodes back identically).
+ * Encode a query key or value for display: percent-encode only characters that are
+ * structurally significant in a query string (&, =, +, #, %) so the URL stays
+ * human-readable (e.g. `"`, `(`, `)`, `[`, `]` are shown as-is).
+ */
+function encodeHumanReadable(str: string): string {
+  return encodeURIComponent(str).replace(/%([0-9A-F]{2})/gi, (match, hex) => {
+    const char = String.fromCharCode(parseInt(hex, 16));
+    return '&=+#%'.includes(char) ? match : char;
+  });
+}
+
+/**
+ * Serialize the editable shape back into a URL string. Structural delimiters
+ * (&, =, #) are always encoded when they appear inside keys/values, but
+ * human-readable characters like quotes and brackets are kept unencoded.
  */
 export function serializeUrl(parsed: ParsedUrl): string {
-  const search = new URLSearchParams();
+  const parts: string[] = [];
   for (const p of parsed.params) {
     // Skip params with empty key — they'd produce a malformed "=value" token.
     // Empty values are fine (e.g., ?flag=).
     if (p.key === '') continue;
-    search.append(p.key, p.value);
+    parts.push(`${encodeHumanReadable(p.key)}=${encodeHumanReadable(p.value)}`);
   }
-  const query = search.toString();
+  const query = parts.join('&');
+
+  if (parsed.hashQuery) {
+    // Hash-router: reconstruct as base + hashPath + ?query
+    return `${parsed.base}${parsed.fragment}${query ? `?${query}` : ''}`;
+  }
   return `${parsed.base}${query ? `?${query}` : ''}${parsed.fragment}`;
 }
 

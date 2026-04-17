@@ -12,7 +12,12 @@ interface BooleanToggleProps {
  * Space and Enter both activate it (native button semantics). We prevent
  * default on Space to stop the popup from scrolling.
  */
-export function BooleanToggle({ id, value, onChange, 'aria-label': ariaLabel }: BooleanToggleProps) {
+export function BooleanToggle({
+  id,
+  value,
+  onChange,
+  'aria-label': ariaLabel,
+}: BooleanToggleProps) {
   function onKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
     if (e.key === ' ') {
       e.preventDefault();
@@ -22,7 +27,6 @@ export function BooleanToggle({ id, value, onChange, 'aria-label': ariaLabel }: 
 
   return (
     <div className={styles.row}>
-      <span className={styles.badge} aria-hidden="true">BOOL</span>
       <button
         id={id}
         type="button"

@@ -19,11 +19,17 @@ export interface QueryParam {
 /**
  * A parsed URL split into the static base and editable parameters.
  * Fragment (`#hash`) is preserved verbatim and re-appended on serialization.
+ *
+ * When `hashQuery` is true the params come from the hash's query string
+ * (hash-router pattern: https://app.com/#/route?param=value).
+ * In that case `fragment` holds only the hash path (e.g. "#/route") and
+ * serialization appends params after a `?` inside the fragment.
  */
 export interface ParsedUrl {
   base: string; // origin + pathname, e.g. "https://example.com/api/v1/search"
   params: QueryParam[];
   fragment: string; // includes leading "#" or empty string
+  hashQuery: boolean; // true when params live inside the hash fragment
 }
 
 export interface SavedLink {

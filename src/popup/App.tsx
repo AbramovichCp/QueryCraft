@@ -28,6 +28,7 @@ export function App() {
   const tabState = useAppStore((s) => s.tabState);
   const currentParsed = useAppStore((s) => s.currentParsed);
   const announcement = useAppStore((s) => s.announcement);
+  const setCurrentUrl = useAppStore((s) => s.setCurrentUrl);
   const updateKey = useAppStore((s) => s.updateParamKey);
   const updateValue = useAppStore((s) => s.updateParamValue);
   const toggleBool = useAppStore((s) => s.toggleBooleanParam);
@@ -155,7 +156,7 @@ export function App() {
         <>
           <div className={styles.scrollArea}>
             <div className={styles.previewWrap}>
-              <UrlPreview parsed={currentParsed} />
+              <UrlPreview parsed={currentParsed} onUrlChange={setCurrentUrl} />
             </div>
             <ParamList
               params={currentParsed.params}

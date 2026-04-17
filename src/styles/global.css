@@ -22,6 +22,8 @@ html {
   background: var(--color-bg);
   width: var(--popup-width);
   height: var(--popup-max-height);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
   /* Prevent font-size inflation on mobile-like viewports */
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;

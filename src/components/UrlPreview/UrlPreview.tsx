@@ -1,54 +1,87 @@
-import { useMemo } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ParsedUrl } from '@/types';
+import { serializeUrl } from '@/lib/urlParser';
 import styles from './UrlPreview.module.css';
 
 interface UrlPreviewProps {
   parsed: ParsedUrl;
+  onUrlChange: (rawUrl: string) => void;
 }
 
-interface Token {
-  kind: 'base' | 'separator' | 'key' | 'value';
-  text: string;
-  id: string;
-}
-
-/**
- * Tokenizes the parsed URL for display. We can't reuse serializeUrl directly
- * because we want fine-grained control over each fragment's styling.
- *
- * Percent-encoding note: we display keys verbatim (as the user typed them) but
- * we display values verbatim too — we do NOT re-encode here, because the point
- * of the preview is to show what's currently in the editor, not what will be
- * sent to the network. Encoding is only applied on Apply.
- */
-function tokenize(parsed: ParsedUrl): Token[] {
-  const tokens: Token[] = [{ kind: 'base', text: parsed.base, id: 'base' }];
-  parsed.params.forEach((p, i) => {
-    tokens.push({ kind: 'separator', text: i === 0 ? '?' : '&', id: `sep-${p.id}` });
-    tokens.push({ kind: 'key', text: p.key || '(empty)', id: `k-${p.id}` });
-    tokens.push({ kind: 'separator', text: '=', id: `eq-${p.id}` });
-    tokens.push({ kind: 'value', text: p.value, id: `v-${p.id}` });
-  });
-  if (parsed.fragment) {
-    tokens.push({ kind: 'separator', text: parsed.fragment, id: 'frag' });
+function renderHighlighted(url: string) {
+  const questionIdx = url.indexOf('?');
+  if (questionIdx === -1) {
+    return <>{url}</>;
   }
-  return tokens;
+
+  const base = url.slice(0, questionIdx);
+  const queryStr = url.slice(questionIdx + 1);
+
+  const nodes: React.ReactNode[] = [
+    <span key="base">{base}</span>,
+    <span key="qs" className={styles.sep}>?</span>,
+  ];
+
+  const params = queryStr.split('&');
+  params.forEach((part, i) => {
+    const eqIdx = part.indexOf('=');
+    if (eqIdx === -1) {
+      nodes.push(<span key={`pk${i}`} className={styles.paramKey}>{part}</span>);
+    } else {
+      nodes.push(
+        <span key={`pk${i}`} className={styles.paramKey}>{part.slice(0, eqIdx)}</span>,
+        <span key={`sep${i}`} className={styles.sep}>=</span>,
+        <span key={`pv${i}`}>{part.slice(eqIdx + 1)}</span>,
+      );
+    }
+    if (i < params.length - 1) {
+      nodes.push(<span key={`amp${i}`} className={styles.sep}>&amp;</span>);
+    }
+  });
+
+  return <>{nodes}</>;
 }
 
-export function UrlPreview({ parsed }: UrlPreviewProps) {
-  const tokens = useMemo(() => tokenize(parsed), [parsed]);
+export function UrlPreview({ parsed, onUrlChange }: UrlPreviewProps) {
+  const serialized = serializeUrl(parsed);
+  const [localValue, setLocalValue] = useState(serialized);
+  const focusedRef = useRef(false);
+
+  useEffect(() => {
+    if (!focusedRef.current) {
+      setLocalValue(serialized);
+    }
+  }, [serialized]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setLocalValue(value);
+    onUrlChange(value);
+  };
+
+  const handleBlur = () => {
+    focusedRef.current = false;
+    setLocalValue(serialized);
+  };
 
   return (
-    <section
-      aria-label="Preview of current URL with highlighted query parameter keys"
-      className={styles.root}
-    >
-      <div className={styles.text}>
-        {tokens.map((t) => (
-          <span key={t.id} className={styles[t.kind]}>
-            {t.text}
-          </span>
-        ))}
+    <section aria-label="URL editor" className={styles.root}>
+      <div className={styles.editorWrapper}>
+        <div className={styles.highlight} aria-hidden="true">
+          {renderHighlighted(localValue)}
+        </div>
+        <textarea
+          className={styles.textarea}
+          value={localValue}
+          onChange={handleChange}
+          onFocus={() => { focusedRef.current = true; }}
+          onBlur={handleBlur}
+          spellCheck={false}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          aria-label="Current URL"
+        />
       </div>
     </section>
   );

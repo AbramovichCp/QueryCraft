@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import type { ThemePreference } from '@/types';
 import { IconMonitor, IconMoon, IconSun } from '../icons';
 import styles from './ThemeToggle.module.css';
@@ -14,54 +15,79 @@ interface Option {
 }
 
 const OPTIONS: Option[] = [
-  { value: 'light', label: 'Light theme', icon: <IconSun /> },
-  { value: 'system', label: 'System theme', icon: <IconMonitor /> },
-  { value: 'dark', label: 'Dark theme', icon: <IconMoon /> },
+  { value: 'light', label: 'Light', icon: <IconSun /> },
+  { value: 'system', label: 'System', icon: <IconMonitor /> },
+  { value: 'dark', label: 'Dark', icon: <IconMoon /> },
 ];
 
-/**
- * Segmented control implemented as a radio group. Each button carries
- * role="radio" and the group carries role="radiogroup", which screen readers
- * announce with the current selection and arrow-key navigation semantics.
- */
 export function ThemeToggle({ preference, onChange }: ThemeToggleProps) {
-  function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    e.preventDefault();
-    const idx = OPTIONS.findIndex((o) => o.value === preference);
-    const next =
-      e.key === 'ArrowRight'
-        ? OPTIONS[(idx + 1) % OPTIONS.length]
-        : OPTIONS[(idx - 1 + OPTIONS.length) % OPTIONS.length];
-    onChange(next.value);
-  }
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open]);
+
+  const current = OPTIONS.find((o) => o.value === preference) ?? OPTIONS[1];
 
   return (
-    <div
-      role="radiogroup"
-      aria-label="Theme"
-      className={styles.group}
-      onKeyDown={onKeyDown}
-    >
-      {OPTIONS.map((opt) => {
-        const selected = preference === opt.value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            aria-label={opt.label}
-            tabIndex={selected ? 0 : -1}
-            className={[styles.item, selected ? styles.selected : ''].join(' ')}
-            onClick={() => onChange(opt.value)}
-          >
-            <span className={styles.icon} aria-hidden="true">
-              {opt.icon}
-            </span>
-          </button>
-        );
-      })}
+    <div ref={wrapperRef} className={styles.wrapper}>
+      <button
+        type="button"
+        aria-label={`Theme: ${current.label}. Click to change.`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={styles.trigger}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className={styles.icon} aria-hidden="true">
+          {current.icon}
+        </span>
+      </button>
+
+      {open && (
+        <div role="listbox" aria-label="Select theme" className={styles.dropdown}>
+          {OPTIONS.map((opt) => {
+            const selected = preference === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                className={[styles.option, selected ? styles.selected : ''].join(' ')}
+                onClick={() => {
+                  onChange(opt.value);
+                  setOpen(false);
+                }}
+              >
+                <span className={styles.optionIcon} aria-hidden="true">
+                  {opt.icon}
+                </span>
+                <span>{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

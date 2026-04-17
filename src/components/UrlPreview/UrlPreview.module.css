@@ -1,33 +1,60 @@
 .root {
   margin: 0 var(--space-5);
-  padding: var(--space-4);
+  padding: var(--space-1);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast);
 }
 
-.text {
+.root:focus-within {
+  border-color: var(--color-focus);
+}
+
+/* Grid stacking: highlight div sits behind a transparent textarea */
+.editorWrapper {
+  display: grid;
+  min-height: 64px;
+}
+
+.highlight {
+  grid-area: 1 / 1;
+  padding: var(--space-3);
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-relaxed);
-  word-break: break-all;
-  user-select: text;
-  /* Selection contrast is preserved by using currentColor backgrounds via browser default */
-}
-
-.base {
-  color: var(--color-text-muted);
-}
-
-.separator {
-  color: var(--color-text-muted);
-}
-
-.key {
-  color: var(--color-accent);
-  font-weight: 500;
-}
-
-.value {
   color: var(--color-text-primary);
+  word-break: break-all;
+  white-space: pre-wrap;
+  pointer-events: none;
+  user-select: none;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.paramKey {
+  color: var(--color-accent);
+}
+
+.sep {
+  color: var(--color-text-muted);
+}
+
+.textarea {
+  grid-area: 1 / 1;
+  display: block;
+  width: 100%;
+  padding: var(--space-3);
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  color: transparent;
+  caret-color: var(--color-text-primary);
+  word-break: break-all;
+  box-sizing: border-box;
+  field-sizing: content;
 }
