@@ -1,4 +1,7 @@
+import { useEffect, useState } from 'react';
 import type { QueryParam } from '@/types';
+import { StackFrame } from '../JsonStack';
+import type { FrameInfo } from '../JsonStack';
 import { ParamRow } from '../ParamRow';
 import { AddParamRow } from '../AddParamRow';
 import styles from './ParamList.module.css';
@@ -21,6 +24,47 @@ export function ParamList({
   onAdd,
 }: ParamListProps) {
   const headingId = 'params-heading';
+  const [frames, setFrames] = useState<FrameInfo[]>([]);
+  const [viewMode, setViewMode] = useState<'structured' | 'raw'>('structured');
+
+  // Keyboard: Esc pops one frame, Cmd/Ctrl+Backspace pops all
+  useEffect(() => {
+    if (frames.length === 0) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setFrames((prev) => (prev.length <= 1 ? [] : prev.slice(0, -1)));
+      }
+      if (e.key === 'Backspace' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setFrames([]);
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [frames.length]);
+
+  function handleExpand(paramId: string, paramKey: string) {
+    setFrames([{ name: paramKey, path: [], paramId }]);
+  }
+
+  function pushFrame(frame: FrameInfo) {
+    setFrames((prev) => [...prev, frame]);
+  }
+
+  function popFrame() {
+    setFrames((prev) => (prev.length <= 1 ? [] : prev.slice(0, -1)));
+  }
+
+  function popAll() {
+    setFrames([]);
+  }
+
+  function popTo(index: number) {
+    setFrames((prev) => prev.slice(0, index + 1));
+  }
+
+  const showStack = frames.length > 0;
 
   return (
     <section className={styles.section} aria-labelledby={headingId}>
@@ -33,20 +77,40 @@ export function ParamList({
         </span>
       </div>
 
-      <ul className={styles.list} role="list">
-        {params.map((param) => (
-          <ParamRow
-            key={param.id}
-            param={param}
-            onKeyChange={onKeyChange}
-            onValueChange={onValueChange}
-            onToggleBoolean={onToggleBoolean}
-            onRemove={onRemove}
-          />
-        ))}
-      </ul>
-
-      <AddParamRow onAdd={onAdd} />
+      {showStack ? (
+        <StackFrame
+          frames={frames}
+          params={params}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onValueChange={onValueChange}
+          onPop={popFrame}
+          onPopAll={popAll}
+          onPopTo={popTo}
+          onPush={pushFrame}
+        />
+      ) : (
+        <>
+          <ul className={styles.list} role="list">
+            {params.map((param) => (
+              <ParamRow
+                key={param.id}
+                param={param}
+                onKeyChange={onKeyChange}
+                onValueChange={onValueChange}
+                onToggleBoolean={onToggleBoolean}
+                onRemove={onRemove}
+                onExpand={
+                  param.type === 'structured'
+                    ? () => handleExpand(param.id, param.key)
+                    : undefined
+                }
+              />
+            ))}
+          </ul>
+          <AddParamRow onAdd={onAdd} />
+        </>
+      )}
     </section>
   );
 }

@@ -4,6 +4,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  overflow: hidden;
   transition: border-color var(--transition-fast);
 }
 
@@ -15,6 +16,8 @@
 .editorWrapper {
   display: grid;
   min-height: 64px;
+  max-height: 160px;
+  overflow-y: auto;
 }
 
 .highlight {

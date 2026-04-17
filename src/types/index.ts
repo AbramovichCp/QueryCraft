@@ -3,7 +3,7 @@
  */
 
 /** Detected/assigned type of a parameter value — drives which editor control is rendered. */
-export type ParamType = 'string' | 'boolean' | 'number';
+export type ParamType = 'string' | 'boolean' | 'number' | 'structured';
 
 /**
  * A single query parameter. We keep the `id` stable across edits so React reconciliation

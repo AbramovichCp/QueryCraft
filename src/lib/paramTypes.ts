@@ -16,5 +16,15 @@ export function detectParamType(value: string): ParamType {
     // We only accept digits, optional leading -, and a single decimal point.
     if (/^-?\d+(\.\d+)?$/.test(value)) return 'number';
   }
+  // Structured detection: valid JSON object or array.
+  const trimmed = value.trim();
+  if (trimmed[0] === '{' || trimmed[0] === '[') {
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      if (typeof parsed === 'object' && parsed !== null) return 'structured';
+    } catch {
+      // fall through to string
+    }
+  }
   return 'string';
 }

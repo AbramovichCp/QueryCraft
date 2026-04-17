@@ -1,0 +1,35 @@
+.leaf {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 1px 3px;
+  transition: background var(--transition-fast);
+  /* Single line with ellipsis — full value visible on click-to-edit */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.leaf:hover {
+  background: rgba(167, 139, 250, 0.12);
+}
+
+/* Type-based colors — all verified WCAG AA in both themes (see tokens.css) */
+.typeString  { color: var(--json-string); }
+.typeNumber  { color: var(--json-number); }
+.typeBool    { color: var(--json-boolean); }
+.typeNull    { color: var(--json-null); }
+
+.input {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  padding: 1px 4px;
+  min-width: 60px;
+  outline: none;
+}
