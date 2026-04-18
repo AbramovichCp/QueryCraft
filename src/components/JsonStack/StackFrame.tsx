@@ -4,6 +4,7 @@ import {
   serializeStructuredValue,
   getAtPath,
   setAtPath,
+  renameKeyAtPath,
 } from '@/lib/structuredParam';
 import { JsonTree } from './JsonTree';
 import { RawJsonEditor } from './RawJsonEditor';
@@ -64,6 +65,11 @@ export function StackFrame({
     onPush({ name, path: childPath, paramId: currentFrame.paramId });
   }
 
+  function handleKeyChange(oldKey: string, newKey: string) {
+    const newRoot = renameKeyAtPath(rootValue, currentFrame.path, oldKey, newKey);
+    onValueChange(currentFrame.paramId, serializeStructuredValue(newRoot));
+  }
+
   function handleRawChange(newValue: unknown) {
     const newRoot = setAtPath(rootValue, currentFrame.path, newValue);
     onValueChange(currentFrame.paramId, serializeStructuredValue(newRoot));
@@ -120,6 +126,7 @@ export function StackFrame({
             value={frameValue}
             onPush={handlePush}
             onLeafChange={handleLeafChange}
+            onKeyChange={handleKeyChange}
           />
         ) : (
           <RawJsonEditor

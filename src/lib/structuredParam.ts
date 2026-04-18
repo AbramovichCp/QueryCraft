@@ -104,3 +104,25 @@ export function coerceLeaf(draft: string, original: unknown): unknown {
 export function isContainer(value: unknown): boolean {
   return typeof value === 'object' && value !== null;
 }
+
+/**
+ * Immutably rename an object key at `path` inside `root`, preserving entry order.
+ * Returns `root` unchanged if `newKey === oldKey`, `newKey` is empty, or the
+ * target is not a plain object.
+ */
+export function renameKeyAtPath(
+  root: unknown,
+  path: (string | number)[],
+  oldKey: string,
+  newKey: string,
+): unknown {
+  if (newKey === oldKey || newKey === '') return root;
+  const target = getAtPath(root, path);
+  if (typeof target !== 'object' || target === null || Array.isArray(target)) return root;
+  const obj = target as Record<string, unknown>;
+  const newObj: Record<string, unknown> = {};
+  for (const k of Object.keys(obj)) {
+    newObj[k === oldKey ? newKey : k] = obj[k];
+  }
+  return setAtPath(root, path, newObj);
+}

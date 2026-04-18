@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { isContainer, shortPreview } from '@/lib/structuredParam';
 import { JsonLeafInput } from './JsonLeafInput';
 import styles from './JsonTree.module.css';
@@ -6,16 +7,65 @@ interface JsonTreeProps {
   value: unknown;
   onPush: (key: string | number) => void;
   onLeafChange: (key: string | number, newValue: unknown) => void;
+  onKeyChange?: (oldKey: string, newKey: string) => void;
 }
 
-function KeyLabel({ k, isArray }: { k: string | number; isArray: boolean }) {
-  if (isArray) {
-    return <span className={styles.indexKey}>{k}</span>;
+function EditableKey({ k, onCommit }: { k: string; onCommit: (newKey: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(k);
+
+  if (editing) {
+    return (
+      <input
+        className={styles.keyInput}
+        value={draft}
+        autoFocus
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          setEditing(false);
+          onCommit(draft);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            (e.target as HTMLInputElement).blur();
+          }
+          if (e.key === 'Escape') {
+            setDraft(k);
+            setEditing(false);
+          }
+        }}
+        spellCheck={false}
+        aria-label={`Rename key ${k}`}
+      />
+    );
   }
-  return <span className={styles.objectKey}>"{k}"</span>;
+
+  return (
+    <span
+      className={styles.objectKey}
+      onClick={(e) => {
+        e.stopPropagation();
+        setDraft(k);
+        setEditing(true);
+      }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          setDraft(k);
+          setEditing(true);
+        }
+      }}
+    >
+      "{k}"
+    </span>
+  );
 }
 
-export function JsonTree({ value, onPush, onLeafChange }: JsonTreeProps) {
+export function JsonTree({ value, onPush, onLeafChange, onKeyChange }: JsonTreeProps) {
   const isArr = Array.isArray(value);
   const entries: [string | number, unknown][] = isArr
     ? (value as unknown[]).map((v, i) => [i, v])
@@ -52,7 +102,13 @@ export function JsonTree({ value, onPush, onLeafChange }: JsonTreeProps) {
             }
             aria-label={container ? `Drill into ${String(k)}` : undefined}
           >
-            <KeyLabel k={k} isArray={isArr} />
+            {!isArr && onKeyChange ? (
+              <EditableKey k={String(k)} onCommit={(newKey) => onKeyChange(String(k), newKey)} />
+            ) : isArr ? (
+              <span className={styles.indexKey}>{k}</span>
+            ) : (
+              <span className={styles.objectKey}>"{k}"</span>
+            )}
             <span className={styles.colon}>{' : '}</span>
             {container ? (
               <>

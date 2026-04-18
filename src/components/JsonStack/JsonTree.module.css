@@ -46,6 +46,27 @@
 .objectKey {
   color: var(--json-key);
   white-space: nowrap;
+  cursor: text;
+  border-radius: var(--radius-sm);
+  padding: 1px 3px;
+  transition: background var(--transition-fast);
+}
+
+.objectKey:hover {
+  background: rgba(167, 139, 250, 0.12);
+}
+
+.keyInput {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--json-key);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  padding: 1px 4px;
+  field-sizing: content;
+  min-width: 20px;
+  outline: none;
 }
 
 .indexKey {
