@@ -53,15 +53,24 @@ export function parseUrl(rawUrl: string): ParsedUrl {
 }
 
 /**
- * Encode a query key or value for display: percent-encode only characters that are
- * structurally significant in a query string (&, =, +, #, %) so the URL stays
- * human-readable (e.g. `"`, `(`, `)`, `[`, `]` are shown as-is).
+ * Encode a query key or value for display.
+ *
+ * Only the five characters that are structurally significant inside a query
+ * string need to be percent-encoded:
+ *   &  →  %26  (param separator)
+ *   =  →  %3D  (key/value separator)
+ *   +  →  %2B  (space alias in form encoding)
+ *   #  →  %23  (fragment delimiter)
+ *   %  →  %25  (escape prefix)
+ *
+ * Everything else — Latin, Cyrillic, Chinese, emoji, punctuation — is left
+ * as its original Unicode character so the URL is human-readable.
+ * The previous approach (encodeURIComponent + per-byte decode) incorrectly
+ * converted multi-byte UTF-8 sequences (e.g. Cyrillic %D0%BA) into garbage
+ * Latin-1 characters.
  */
 function encodeHumanReadable(str: string): string {
-  return encodeURIComponent(str).replace(/%([0-9A-F]{2})/gi, (match, hex) => {
-    const char = String.fromCharCode(parseInt(hex, 16));
-    return '&=+#%'.includes(char) ? match : char;
-  });
+  return str.replace(/[&=+#%]/g, (c) => encodeURIComponent(c));
 }
 
 /**
