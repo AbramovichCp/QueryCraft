@@ -13,6 +13,27 @@ function generateId(): string {
 }
 
 /**
+ * Normalize a decoded param value: structured (JSON object/array) values are
+ * compacted via JSON.parse → JSON.stringify to strip any whitespace that was
+ * baked in by pretty-printing (e.g. %0A%09 newline/tab sequences). This keeps
+ * p.value consistent and prevents literal whitespace from leaking into the URL.
+ */
+function normalizeValue(raw: string): string {
+  const t = raw.trim();
+  if (t[0] === '{' || t[0] === '[') {
+    try {
+      const parsed: unknown = JSON.parse(t);
+      if (typeof parsed === 'object' && parsed !== null) {
+        return JSON.stringify(parsed);
+      }
+    } catch {
+      // not valid JSON — return as-is
+    }
+  }
+  return raw;
+}
+
+/**
  * Parse a URL string into its editable shape. Unlike `URLSearchParams`, we preserve
  * parameter order (which matters for some APIs) and keep structured keys like
  * `filters[category]` as opaque strings rather than trying to nest them.
@@ -33,7 +54,12 @@ export function parseUrl(rawUrl: string): ParsedUrl {
     const hashSearch = url.hash.slice(qIdx + 1); // e.g. "foo=bar&baz=qux"
 
     for (const [key, value] of new URLSearchParams(hashSearch).entries()) {
-      params.push({ id: generateId(), key, value, type: detectParamType(value) });
+      params.push({
+        id: generateId(),
+        key,
+        value: normalizeValue(value),
+        type: detectParamType(value),
+      });
     }
 
     return { base, params, fragment: hashPath, hashQuery: true };
@@ -44,7 +70,7 @@ export function parseUrl(rawUrl: string): ParsedUrl {
     params.push({
       id: generateId(),
       key,
-      value,
+      value: normalizeValue(value),
       type: detectParamType(value),
     });
   }
@@ -90,6 +116,26 @@ export function serializeUrl(parsed: ParsedUrl): string {
 
   if (parsed.hashQuery) {
     // Hash-router: reconstruct as base + hashPath + ?query
+    return `${parsed.base}${parsed.fragment}${query ? `?${query}` : ''}`;
+  }
+  return `${parsed.base}${query ? `?${query}` : ''}${parsed.fragment}`;
+}
+
+/**
+ * Serialize the editable shape into a fully percent-encoded URL suitable for
+ * navigation (Apply / Copy). All key and value characters are encoded via
+ * encodeURIComponent so the browser receives a spec-compliant URL, matching
+ * the original encoding of the page (e.g. JSON params stay as %7B...%7D).
+ */
+export function serializeUrlForNav(parsed: ParsedUrl): string {
+  const parts: string[] = [];
+  for (const p of parsed.params) {
+    if (p.key === '') continue;
+    parts.push(`${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`);
+  }
+  const query = parts.join('&');
+
+  if (parsed.hashQuery) {
     return `${parsed.base}${parsed.fragment}${query ? `?${query}` : ''}`;
   }
   return `${parsed.base}${query ? `?${query}` : ''}${parsed.fragment}`;

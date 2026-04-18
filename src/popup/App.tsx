@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useAppStore, selectCurrentUrl } from '@/store/useAppStore';
+import { useAppStore, selectCurrentUrl, selectNavUrl } from '@/store/useAppStore';
 import { useActiveTabUrl } from '@/hooks/useActiveTabUrl';
 import { useClipboard } from '@/hooks/useClipboard';
 import { useTheme } from '@/hooks/useTheme';
@@ -37,7 +37,8 @@ export function App() {
   const resetStore = useAppStore((s) => s.reset);
   const announce = useAppStore((s) => s.announce);
 
-  const currentUrl = useAppStore(selectCurrentUrl);
+  const currentUrl = useAppStore(selectCurrentUrl); // human-readable, for display
+  const navUrl = useAppStore(selectNavUrl);          // encoded, for Apply / Copy
 
   const { copied, copy } = useClipboard();
   const { links, groups, saveLink, deleteLink, createGroup } = useSavedLinks();
@@ -47,26 +48,26 @@ export function App() {
   /* ---------- Action handlers ---------- */
 
   const handleApply = useCallback(async () => {
-    if (tabState.status !== 'ready' || !currentUrl) return;
+    if (tabState.status !== 'ready' || !navUrl) return;
     try {
-      await tabs.updateUrl(tabState.tabId, currentUrl);
+      await tabs.updateUrl(tabState.tabId, navUrl);
       announce('URL applied to the current tab.');
     } catch (err) {
       announce(
         `Failed to apply URL: ${err instanceof Error ? err.message : 'unknown error'}`,
       );
     }
-  }, [tabState, currentUrl, announce]);
+  }, [tabState, navUrl, announce]);
 
   const handleReset = useCallback(() => {
     resetStore();
   }, [resetStore]);
 
   const handleCopy = useCallback(async () => {
-    if (!currentUrl) return;
-    const ok = await copy(currentUrl);
+    if (!navUrl) return;
+    const ok = await copy(navUrl);
     announce(ok ? 'URL copied to clipboard.' : 'Failed to copy URL.');
-  }, [currentUrl, copy, announce]);
+  }, [navUrl, copy, announce]);
 
   const handleOpenDrawer = useCallback(() => {
     setDrawerOpen(true);
@@ -173,7 +174,7 @@ export function App() {
             onCopy={() => void handleCopy()}
             onSave={handleOpenDrawer}
             copied={copied}
-            applyDisabled={!currentUrl}
+            applyDisabled={!navUrl}
           />
         </>
       )}

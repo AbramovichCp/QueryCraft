@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { ParsedUrl, QueryParam, TabLoadState } from '@/types';
-import { createParam, isEditableUrl, parseUrl, serializeUrl } from '@/lib/urlParser';
+import { createParam, isEditableUrl, parseUrl, serializeUrl, serializeUrlForNav } from '@/lib/urlParser';
 import { detectParamType } from '@/lib/paramTypes';
 
 interface AppState {
@@ -155,7 +155,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   announce: (message) => set({ announcement: message }),
 }));
 
-/** Selector: the serialized current URL, memoization-friendly. */
+/** Selector: human-readable URL for display in the preview field. */
 export function selectCurrentUrl(state: AppState): string {
   return state.currentParsed ? serializeUrl(state.currentParsed) : '';
+}
+
+/** Selector: fully percent-encoded URL for Apply / Copy actions. */
+export function selectNavUrl(state: AppState): string {
+  return state.currentParsed ? serializeUrlForNav(state.currentParsed) : '';
 }
