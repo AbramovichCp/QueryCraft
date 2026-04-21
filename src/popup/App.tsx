@@ -4,6 +4,7 @@ import { useActiveTabUrl } from '@/hooks/useActiveTabUrl';
 import { useClipboard } from '@/hooks/useClipboard';
 import { useTheme } from '@/hooks/useTheme';
 import { useSavedLinks } from '@/hooks/useSavedLinks';
+import { usePresets } from '@/hooks/usePresets';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { tabs } from '@/lib/tabs';
 import { parseUrl } from '@/lib/urlParser';
@@ -13,9 +14,10 @@ import { ParamList } from '@/components/ParamList';
 import { ActionBar } from '@/components/ActionBar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { IconButton } from '@/components/IconButton';
-import { IconBookmark } from '@/components/icons';
+import { IconBookmark, IconSettings } from '@/components/icons';
 import { LiveRegion } from '@/components/LiveRegion';
 import { SavedLinksDrawer } from '@/components/SavedLinksDrawer';
+import { PresetsSettings } from '@/components/PresetsSettings';
 import { EmptyState } from '@/components/EmptyState';
 import styles from './App.module.css';
 
@@ -23,6 +25,7 @@ export function App() {
   // Load URL on mount, hydrate theme, bind storage-backed saved links.
   useActiveTabUrl();
   const { preference, setPreference } = useTheme();
+  const { presets, addPreset, updatePreset, deletePreset } = usePresets();
 
   // Zustand store — individual selectors keep re-renders narrow.
   const tabState = useAppStore((s) => s.tabState);
@@ -44,6 +47,7 @@ export function App() {
   const { links, groups, saveLink, deleteLink, createGroup } = useSavedLinks();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   /* ---------- Action handlers ---------- */
 
@@ -86,8 +90,6 @@ export function App() {
     (url: string) => {
       if (tabState.status !== 'ready') return;
       try {
-        // Replace current editor state with the saved URL without touching the actual tab.
-        // User can click Apply if they want to navigate.
         const parsed = parseUrl(url);
         useAppStore.setState({
           currentParsed: {
@@ -114,10 +116,11 @@ export function App() {
         key: 'Escape',
         handler: () => {
           if (drawerOpen) setDrawerOpen(false);
+          if (settingsOpen) setSettingsOpen(false);
         },
       },
     ],
-    [handleApply, handleOpenDrawer, drawerOpen],
+    [handleApply, handleOpenDrawer, drawerOpen, settingsOpen],
   );
   useKeyboardShortcuts(shortcuts);
 
@@ -126,6 +129,11 @@ export function App() {
   const headerActions = (
     <>
       <ThemeToggle preference={preference} onChange={setPreference} />
+      <IconButton
+        aria-label="Presets settings"
+        icon={<IconSettings />}
+        onClick={() => setSettingsOpen((o) => !o)}
+      />
       <IconButton
         aria-label="Open saved URLs"
         icon={<IconBookmark />}
@@ -156,26 +164,41 @@ export function App() {
       {tabState.status === 'ready' && currentParsed && (
         <>
           <div className={styles.scrollArea}>
-            <div className={styles.previewWrap}>
-              <UrlPreview parsed={currentParsed} onUrlChange={setCurrentUrl} />
-            </div>
-            <ParamList
-              params={currentParsed.params}
-              onKeyChange={updateKey}
-              onValueChange={updateValue}
-              onToggleBoolean={toggleBool}
-              onRemove={removeParam}
-              onAdd={addParam}
-            />
+            {settingsOpen ? (
+              <PresetsSettings
+                presets={presets}
+                onAdd={addPreset}
+                onUpdate={updatePreset}
+                onDelete={deletePreset}
+                onClose={() => setSettingsOpen(false)}
+              />
+            ) : (
+              <>
+                <div className={styles.previewWrap}>
+                  <UrlPreview parsed={currentParsed} onUrlChange={setCurrentUrl} />
+                </div>
+                <ParamList
+                  params={currentParsed.params}
+                  presets={presets}
+                  onKeyChange={updateKey}
+                  onValueChange={updateValue}
+                  onToggleBoolean={toggleBool}
+                  onRemove={removeParam}
+                  onAdd={addParam}
+                />
+              </>
+            )}
           </div>
-          <ActionBar
-            onApply={() => void handleApply()}
-            onReset={handleReset}
-            onCopy={() => void handleCopy()}
-            onSave={handleOpenDrawer}
-            copied={copied}
-            applyDisabled={!navUrl}
-          />
+          {!settingsOpen && (
+            <ActionBar
+              onApply={() => void handleApply()}
+              onReset={handleReset}
+              onCopy={() => void handleCopy()}
+              onSave={handleOpenDrawer}
+              copied={copied}
+              applyDisabled={!navUrl}
+            />
+          )}
         </>
       )}
 

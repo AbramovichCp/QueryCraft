@@ -86,6 +86,13 @@ export const IconChevronLeft = () => (
   </svg>
 );
 
+export const IconSettings = () => (
+  <svg {...baseProps}>
+    <circle cx="8" cy="8" r="2.5" />
+    <path d="M8 2 L8 3.5 M8 12.5 L8 14 M2 8 L3.5 8 M12.5 8 L14 8 M3.8 3.8 L4.9 4.9 M11.1 11.1 L12.2 12.2 M12.2 3.8 L11.1 4.9 M4.9 11.1 L3.8 12.2" />
+  </svg>
+);
+
 export const IconLogo = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
     <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />

@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
-import type { QueryParam } from '@/types';
+import type { QueryParam, DslPreset } from '@/types';
+import { findMatchingPreset, looksLikeDsl } from '@/lib/dslParser';
 import { StackFrame } from '../JsonStack';
 import type { FrameInfo } from '../JsonStack';
+import { DslEditorPanel } from '../DslEditorPanel';
 import { ParamRow } from '../ParamRow';
 import { AddParamRow } from '../AddParamRow';
 import styles from './ParamList.module.css';
 
 interface ParamListProps {
   params: QueryParam[];
+  presets: DslPreset[];
   onKeyChange: (id: string, key: string) => void;
   onValueChange: (id: string, value: string) => void;
   onToggleBoolean: (id: string) => void;
@@ -17,6 +20,7 @@ interface ParamListProps {
 
 export function ParamList({
   params,
+  presets,
   onKeyChange,
   onValueChange,
   onToggleBoolean,
@@ -27,25 +31,42 @@ export function ParamList({
   const [frames, setFrames] = useState<FrameInfo[]>([]);
   const [viewMode, setViewMode] = useState<'structured' | 'raw'>('structured');
 
-  // Keyboard: Esc pops one frame, Cmd/Ctrl+Backspace pops all
+  // DSL panel state
+  const [dslParamId, setDslParamId] = useState<string | null>(null);
+  const [dslViewMode, setDslViewMode] = useState<'structured' | 'raw'>('structured');
+
+  // Keyboard: Esc closes DSL panel or JSON frame
   useEffect(() => {
-    if (frames.length === 0) return;
+    const hasOverlay = frames.length > 0 || dslParamId !== null;
+    if (!hasOverlay) return;
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         e.preventDefault();
-        setFrames((prev) => (prev.length <= 1 ? [] : prev.slice(0, -1)));
+        if (frames.length > 0) {
+          setFrames((prev) => (prev.length <= 1 ? [] : prev.slice(0, -1)));
+        } else if (dslParamId !== null) {
+          setDslParamId(null);
+        }
       }
       if (e.key === 'Backspace' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setFrames([]);
+        setDslParamId(null);
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [frames.length]);
+  }, [frames.length, dslParamId]);
 
   function handleExpand(paramId: string, paramKey: string) {
+    setDslParamId(null);
     setFrames([{ name: paramKey, path: [], paramId }]);
+  }
+
+  function handleExpandDsl(paramId: string) {
+    setFrames([]);
+    setDslParamId(paramId);
+    setDslViewMode('structured');
   }
 
   function pushFrame(frame: FrameInfo) {
@@ -65,6 +86,8 @@ export function ParamList({
   }
 
   const showStack = frames.length > 0;
+  const showDsl = !showStack && dslParamId !== null;
+  const dslParam = showDsl ? params.find((p) => p.id === dslParamId) : null;
 
   return (
     <section className={styles.section} aria-labelledby={headingId}>
@@ -89,24 +112,40 @@ export function ParamList({
           onPopTo={popTo}
           onPush={pushFrame}
         />
+      ) : showDsl && dslParam ? (
+        <DslEditorPanel
+          key={dslParamId}
+          paramKey={dslParam.key}
+          value={dslParam.value}
+          viewMode={dslViewMode}
+          onViewModeChange={setDslViewMode}
+          onChange={(newVal) => onValueChange(dslParam.id, newVal)}
+          onClose={() => setDslParamId(null)}
+        />
       ) : (
         <>
           <ul className={styles.list} role="list">
-            {params.map((param) => (
-              <ParamRow
-                key={param.id}
-                param={param}
-                onKeyChange={onKeyChange}
-                onValueChange={onValueChange}
-                onToggleBoolean={onToggleBoolean}
-                onRemove={onRemove}
-                onExpand={
-                  param.type === 'structured'
-                    ? () => handleExpand(param.id, param.key)
-                    : undefined
-                }
-              />
-            ))}
+            {params.map((param) => {
+              const matchedPreset = findMatchingPreset(param.key, presets);
+              const isDsl = matchedPreset !== null && looksLikeDsl(param.value);
+              return (
+                <ParamRow
+                  key={param.id}
+                  param={param}
+                  onKeyChange={onKeyChange}
+                  onValueChange={onValueChange}
+                  onToggleBoolean={onToggleBoolean}
+                  onRemove={onRemove}
+                  isDsl={isDsl}
+                  onExpandDsl={isDsl ? () => handleExpandDsl(param.id) : undefined}
+                  onExpand={
+                    param.type === 'structured' && !isDsl
+                      ? () => handleExpand(param.id, param.key)
+                      : undefined
+                  }
+                />
+              );
+            })}
           </ul>
           <AddParamRow onAdd={onAdd} />
         </>

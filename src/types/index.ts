@@ -48,6 +48,31 @@ export interface Group {
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 
+/** A single filter predicate token: (field-operator-value) */
+export interface DslPredicate {
+  kind: 'predicate';
+  field: string;
+  operator: string;
+  value: string;
+}
+
+/** A logical junction between predicates: AND | OR */
+export interface DslLogic {
+  kind: 'logic';
+  op: 'AND' | 'OR';
+}
+
+export type DslToken = DslPredicate | DslLogic;
+
+/** A user-defined (or built-in) preset that maps param key patterns to a DSL editor. */
+export interface DslPreset {
+  id: string;
+  name: string;
+  /** Glob-style patterns: "*-filters", "events-filters", "q" */
+  paramMatchers: string[];
+  isBuiltIn?: boolean;
+}
+
 /** Special state when the active tab's URL is a browser-internal page we can't edit. */
 export type TabLoadState =
   | { status: 'loading' }

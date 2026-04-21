@@ -14,7 +14,21 @@ interface ParamRowProps {
   onToggleBoolean: (id: string) => void;
   onRemove: (id: string) => void;
   onExpand?: () => void;
+  isDsl?: boolean;
+  onExpandDsl?: () => void;
 }
+
+const ChevronRight = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <path
+      d="M4.5 3L7.5 6L4.5 9"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
 export function ParamRow({
   param,
@@ -23,6 +37,8 @@ export function ParamRow({
   onToggleBoolean,
   onRemove,
   onExpand,
+  isDsl,
+  onExpandDsl,
 }: ParamRowProps) {
   const keyId = useId();
   const valueId = useId();
@@ -30,14 +46,17 @@ export function ParamRow({
   const isBool = param.type === 'boolean';
   const isStructured = param.type === 'structured';
 
-  let preview = '';
+  let structuredPreviewText = '';
   if (isStructured) {
     try {
-      preview = shortPreview(parseStructuredValue(param.value));
+      structuredPreviewText = shortPreview(parseStructuredValue(param.value));
     } catch {
-      preview = param.value;
+      structuredPreviewText = param.value;
     }
   }
+
+  // DSL preview: show the raw string truncated
+  const dslPreviewText = isDsl ? param.value.replace(/^"|"$/g, '') : '';
 
   return (
     <li className={styles.row}>
@@ -66,24 +85,29 @@ export function ParamRow({
               onChange={() => onToggleBoolean(param.id)}
             />
           </>
+        ) : isDsl ? (
+          <div className={styles.structuredValue}>
+            <span className={styles.structuredPreview}>{dslPreviewText}</span>
+            <span className={styles.dslBadge}>DSL</span>
+            <button
+              className={styles.expandBtn}
+              onClick={onExpandDsl}
+              aria-label={`Open DSL editor for ${param.key}`}
+              title="Open DSL editor"
+            >
+              <ChevronRight />
+            </button>
+          </div>
         ) : isStructured ? (
           <div className={styles.structuredValue}>
-            <span className={styles.structuredPreview}>{preview}</span>
+            <span className={styles.structuredPreview}>{structuredPreviewText}</span>
             <button
               className={styles.expandBtn}
               onClick={onExpand}
               aria-label={`Expand structured value for ${param.key}`}
               title="Expand structured value"
             >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path
-                  d="M4.5 3L7.5 6L4.5 9"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <ChevronRight />
             </button>
           </div>
         ) : (

@@ -1,4 +1,4 @@
-import type { SavedLink, Group, ThemePreference } from '@/types';
+import type { SavedLink, Group, ThemePreference, DslPreset } from '@/types';
 
 /**
  * Adapter over chrome.storage.local.
@@ -12,6 +12,7 @@ const KEYS = {
   savedLinks: 'qc.savedLinks',
   groups: 'qc.groups',
   theme: 'qc.theme',
+  presets: 'qc.presets',
 } as const;
 
 export const DEFAULT_GROUP_ID = 'default';
@@ -58,5 +59,13 @@ export const storage = {
 
   async setTheme(theme: ThemePreference): Promise<void> {
     await set(KEYS.theme, theme);
+  },
+
+  async getPresets(): Promise<DslPreset[]> {
+    return get<DslPreset[]>(KEYS.presets, []);
+  },
+
+  async setPresets(presets: DslPreset[]): Promise<void> {
+    await set(KEYS.presets, presets);
   },
 };
