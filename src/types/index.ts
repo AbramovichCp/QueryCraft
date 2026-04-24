@@ -52,5 +52,5 @@ export type ThemePreference = 'light' | 'dark' | 'system';
 export type TabLoadState =
   | { status: 'loading' }
   | { status: 'ready'; tabId: number; url: string }
-  | { status: 'unsupported'; reason: string }
+  | { status: 'unsupported'; reason: string; tabId?: number }
   | { status: 'error'; message: string };

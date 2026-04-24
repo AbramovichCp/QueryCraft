@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { storage, DEFAULT_GROUP_ID } from '@/lib/storage';
 import type { SavedLink, Group } from '@/types';
 
@@ -34,8 +34,12 @@ describe('storage.setSavedLinks', () => {
   });
 
   it('overwrites existing links', async () => {
-    await storage.setSavedLinks([{ id: 'old', url: 'https://old.com', createdAt: 0, groupId: DEFAULT_GROUP_ID }]);
-    const newLinks: SavedLink[] = [{ id: 'new', url: 'https://new.com', createdAt: 1, groupId: DEFAULT_GROUP_ID }];
+    await storage.setSavedLinks([
+      { id: 'old', url: 'https://old.com', createdAt: 0, groupId: DEFAULT_GROUP_ID },
+    ]);
+    const newLinks: SavedLink[] = [
+      { id: 'new', url: 'https://new.com', createdAt: 1, groupId: DEFAULT_GROUP_ID },
+    ];
     await storage.setSavedLinks(newLinks);
     expect(await storage.getSavedLinks()).toEqual(newLinks);
   });

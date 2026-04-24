@@ -84,16 +84,21 @@ export function App() {
 
   const handleLoadSavedLink = useCallback(
     (url: string) => {
-      if (tabState.status !== 'ready') return;
+      const tabId =
+        tabState.status === 'ready'
+          ? tabState.tabId
+          : tabState.status === 'unsupported'
+            ? tabState.tabId
+            : undefined;
+      if (tabId === undefined) return;
       try {
         // Replace current editor state with the saved URL without touching the actual tab.
         // User can click Apply if they want to navigate.
         const parsed = parseUrl(url);
         useAppStore.setState({
-          currentParsed: {
-            ...parsed,
-            params: parsed.params.map((p) => ({ ...p })),
-          },
+          tabState: { status: 'ready', tabId, url },
+          initialParsed: { ...parsed, params: parsed.params.map((p) => ({ ...p })) },
+          currentParsed: { ...parsed, params: parsed.params.map((p) => ({ ...p })) },
           announcement: 'Loaded saved URL into editor.',
         });
       } catch {
