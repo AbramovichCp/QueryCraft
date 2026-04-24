@@ -135,6 +135,7 @@ export function App() {
         aria-label="Open saved URLs"
         icon={<IconBookmark />}
         onClick={handleOpenDrawer}
+        disabled={!currentUrl}
       />
     </>
   );

@@ -117,6 +117,7 @@ export function SavedLinksDrawer({
               onLoadLink={onLoadLink}
               onDeleteLink={onDeleteLink}
               onStartSave={() => setMode('save')}
+              canSave={!!currentUrl}
             />
           )}
         </div>
@@ -200,6 +201,7 @@ interface GroupedLinksListProps {
   onLoadLink: (url: string) => void;
   onDeleteLink: (id: string) => void;
   onStartSave: () => void;
+  canSave: boolean;
 }
 
 function GroupedLinksList({
@@ -208,6 +210,7 @@ function GroupedLinksList({
   onLoadLink,
   onDeleteLink,
   onStartSave,
+  canSave,
 }: GroupedLinksListProps) {
   const totalCount = Array.from(linksByGroup.values()).reduce((sum, l) => sum + l.length, 0);
 
@@ -228,7 +231,7 @@ function GroupedLinksList({
   return (
     <div className={styles.list}>
       <div className={styles.listTop}>
-        <Button variant="primary" size="sm" onClick={onStartSave} block>
+        <Button variant="primary" size="sm" onClick={onStartSave} block disabled={!canSave}>
           Save current URL
         </Button>
       </div>
