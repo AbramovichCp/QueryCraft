@@ -1,8 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import { IconButton } from '../IconButton';
 import { IconPlus } from '../icons';
-import { ParamKeyInput } from '../ParamKeyInput';
-import { ParamValueInput } from '../ParamValueInput';
+import { ParamTextInput } from '../ParamTextInput';
 import styles from './AddParamRow.module.css';
 
 interface AddParamRowProps {
@@ -28,7 +27,8 @@ export function AddParamRow({ onAdd }: AddParamRowProps) {
 
   function commit() {
     if (!canAdd) return;
-    onAdd(key, value);
+    // Trim the key: stray spaces would silently become %20 in the URL.
+    onAdd(key.trim(), value);
     setKey('');
     setValue('');
     // Return focus to key field for fast repeated additions.
@@ -42,8 +42,9 @@ export function AddParamRow({ onAdd }: AddParamRowProps) {
         <label htmlFor={keyId} className="visually-hidden">
           New parameter key
         </label>
-        <ParamKeyInput
+        <ParamTextInput
           id={keyId}
+          variant="key"
           value={key}
           placeholder="Key"
           aria-label="New parameter key"
@@ -56,8 +57,9 @@ export function AddParamRow({ onAdd }: AddParamRowProps) {
         <label htmlFor={valueId} className="visually-hidden">
           New parameter value
         </label>
-        <ParamValueInput
+        <ParamTextInput
           id={valueId}
+          variant="value"
           value={value}
           placeholder="Value"
           aria-label="New parameter value"

@@ -37,7 +37,7 @@
 }
 
 .crumbRoot {
-  color: #9CA3AF;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 2px 4px;
   border-radius: var(--radius-sm);
@@ -57,12 +57,12 @@
 }
 
 .crumbSep {
-  color: #4B5563;
+  color: var(--color-text-muted);
   user-select: none;
 }
 
 .crumbAncestor {
-  color: #9CA3AF;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 2px 4px;
   border-radius: var(--radius-sm);
@@ -76,7 +76,7 @@
 }
 
 .crumbCurrent {
-  color: #7DD3FC;
+  color: var(--json-key);
   font-weight: 600;
   padding: 2px 4px;
 }
@@ -117,6 +117,14 @@
 .body {
   flex: 1;
   overflow-y: auto;
+}
+
+/* Shown when the drilled-into param disappeared or stopped being valid JSON */
+.missing {
+  margin: 0;
+  padding: var(--space-4) 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
 /* ── Footer / Back button ── */

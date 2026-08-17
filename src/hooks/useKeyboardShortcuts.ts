@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { isEditableTarget } from '@/lib/dom';
 
 export interface Shortcut {
   /** Primary key (case-insensitive). Use key values from KeyboardEvent.key. */
@@ -30,12 +31,9 @@ function matches(e: KeyboardEvent, s: Shortcut): boolean {
 export function useKeyboardShortcuts(shortcuts: Shortcut[]): void {
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      const target = e.target as HTMLElement | null;
-      const isEditable =
-        !!target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.isContentEditable);
+      // A component already consumed this key (e.g. cancelling an inline edit).
+      if (e.defaultPrevented) return;
+      const isEditable = isEditableTarget(e.target);
 
       for (const s of shortcuts) {
         if (!matches(e, s)) continue;

@@ -28,7 +28,7 @@ A Chrome extension for inspecting, editing, saving, and replaying URL query para
 | `Enter` in a row field | Commit / advance focus |
 | `Cmd`/`Ctrl` + `Enter` | Apply edited URL to the active tab |
 | `Cmd`/`Ctrl` + `S` | Open the saved URLs drawer |
-| `Esc` | Close the drawer |
+| `Esc` | Close the drawer / step one level out of an expanded JSON value |
 | `Space` on a `BOOL` toggle | Flip the value |
 | `←` / `→` on the theme switch | Cycle light → system → dark |
 
@@ -39,7 +39,7 @@ A Chrome extension for inspecting, editing, saving, and replaying URL query para
 - **Vite** + `@crxjs/vite-plugin` for HMR during popup development
 - **Zustand** for state (small footprint, test-friendly)
 - **CSS Modules** + CSS custom properties for theming
-- **Vitest** + React Testing Library (infrastructure ready; tests not yet written)
+- **Vitest** + React Testing Library (unit tests cover URL parsing, param typing, structured values, storage, and the store)
 
 ## Permissions
 
@@ -47,8 +47,7 @@ The extension requests only what it needs:
 
 | Permission | Why |
 | --- | --- |
-| `activeTab` | Read and update the URL of the currently focused tab |
-| `tabs` | Query the active tab's URL when the popup opens |
+| `activeTab` | Read and update the URL of the currently focused tab (granted per user gesture — no standing access to browsing history) |
 | `storage` | Persist saved links, groups, and theme preference locally |
 
 No `<all_urls>`, no `clipboardWrite` (popups are secure contexts and a user-gesture click is enough for `navigator.clipboard.writeText`).

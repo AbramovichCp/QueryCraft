@@ -15,6 +15,12 @@ export function useFocusTrap<T extends HTMLElement>(
   const ref = useRef<T>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
+  // Read onClose through a ref so the effect below depends only on `active`.
+  // Depending on the callback identity would re-run the effect on every parent
+  // render, yanking focus back to the first focusable element mid-interaction.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     if (!active) return;
 
@@ -28,9 +34,9 @@ export function useFocusTrap<T extends HTMLElement>(
     (focusables[0] ?? container).focus();
 
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && onClose) {
+      if (e.key === 'Escape' && onCloseRef.current) {
         e.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== 'Tab') return;
@@ -54,7 +60,7 @@ export function useFocusTrap<T extends HTMLElement>(
       // Restore focus on deactivation — but only if the element still exists.
       previouslyFocused.current?.focus?.();
     };
-  }, [active, onClose]);
+  }, [active]);
 
   return ref;
 }

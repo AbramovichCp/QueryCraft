@@ -1,16 +1,7 @@
 import type { ParsedUrl, QueryParam, ParamType } from '@/types';
 import { detectParamType } from './paramTypes';
-
-/**
- * Generate a unique ID for a parameter. Using crypto.randomUUID when available
- * (all modern Chrome), falling back to a timestamp + random for robustness in tests.
- */
-function generateId(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
-  return `p_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-}
+import { tryParseStructured } from './structuredParam';
+import { generateId } from './id';
 
 /**
  * Normalize a decoded param value: structured (JSON object/array) values are
@@ -19,18 +10,14 @@ function generateId(): string {
  * p.value consistent and prevents literal whitespace from leaking into the URL.
  */
 function normalizeValue(raw: string): string {
-  const t = raw.trim();
-  if (t[0] === '{' || t[0] === '[') {
-    try {
-      const parsed: unknown = JSON.parse(t);
-      if (typeof parsed === 'object' && parsed !== null) {
-        return JSON.stringify(parsed);
-      }
-    } catch {
-      // not valid JSON — return as-is
-    }
-  }
-  return raw;
+  const parsed = tryParseStructured(raw);
+  return parsed === undefined ? raw : JSON.stringify(parsed);
+}
+
+/** Build a QueryParam from a decoded key/value pair. */
+function makeParam(key: string, rawValue: string): QueryParam {
+  const value = normalizeValue(rawValue);
+  return { id: generateId(), key, value, type: detectParamType(value) };
 }
 
 /**
@@ -43,36 +30,40 @@ function normalizeValue(raw: string): string {
 export function parseUrl(rawUrl: string): ParsedUrl {
   const url = new URL(rawUrl); // throws TypeError on invalid input
 
-  const base = `${url.origin}${url.pathname}`;
+  // Base = full URL minus query and fragment. Built by stripping the parsed
+  // URL rather than `origin + pathname`: origin is the literal string "null"
+  // for file: URLs (outside Chrome) and drops credentials (user:pass@).
+  const stripped = new URL(url);
+  stripped.search = '';
+  stripped.hash = '';
+  const base = stripped.href;
+
   const params: QueryParam[] = [];
 
   // Hash-router pattern: query params live inside the hash fragment.
   // e.g. https://app.com/#/route?foo=bar  →  hash = "#/route?foo=bar"
-  if (url.hash && url.hash.includes('?')) {
-    const qIdx = url.hash.indexOf('?');
-    const hashPath = url.hash.slice(0, qIdx); // e.g. "#/route"
-    const hashSearch = url.hash.slice(qIdx + 1); // e.g. "foo=bar&baz=qux"
+  // Only kicks in when something follows the "?" — a plain anchor that merely
+  // ends in "?" (e.g. "#Why?") stays an opaque fragment.
+  const hashQueryIdx = url.hash.indexOf('?');
+  const hashSearch = hashQueryIdx === -1 ? '' : url.hash.slice(hashQueryIdx + 1);
+
+  if (hashSearch !== '') {
+    const hashPath = url.hash.slice(0, hashQueryIdx); // e.g. "#/route"
 
     for (const [key, value] of new URLSearchParams(hashSearch).entries()) {
-      params.push({
-        id: generateId(),
-        key,
-        value: normalizeValue(value),
-        type: detectParamType(value),
-      });
+      params.push(makeParam(key, value));
     }
 
-    return { base, params, fragment: hashPath, hashQuery: true };
+    // A URL can carry BOTH a real query string and a hash query
+    // (https://app.com/path?main=1#/route?foo=bar). Only the hash query is
+    // editable in this mode; keep the real one verbatim as part of the base
+    // so it survives serialization instead of being silently dropped.
+    return { base: `${base}${url.search}`, params, fragment: hashPath, hashQuery: true };
   }
 
   // Regular query params.
   for (const [key, value] of url.searchParams.entries()) {
-    params.push({
-      id: generateId(),
-      key,
-      value: normalizeValue(value),
-      type: detectParamType(value),
-    });
+    params.push(makeParam(key, value));
   }
 
   return { base, params, fragment: url.hash, hashQuery: false };

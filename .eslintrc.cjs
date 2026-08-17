@@ -10,7 +10,7 @@ module.exports = {
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
-  plugins: ['react-refresh', 'jsx-a11y'],
+  plugins: ['jsx-a11y'],
   settings: { react: { version: '18.3' } },
   rules: {
     'react/react-in-jsx-scope': 'off',

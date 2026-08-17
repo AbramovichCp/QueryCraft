@@ -5,16 +5,26 @@
  * that resolves to an object or array. Anything else is treated as a plain string.
  */
 
+/**
+ * Parse `raw` as a JSON object or array. Returns the parsed value, or
+ * `undefined` when `raw` is not valid JSON or resolves to a non-container
+ * (string/number/boolean/null). Single source of truth for "is this value
+ * structured?" — used by type detection, normalization, and the JSON editor.
+ */
+export function tryParseStructured(raw: string): unknown {
+  const t = raw.trim();
+  if (t[0] !== '{' && t[0] !== '[') return undefined;
+  try {
+    const v: unknown = JSON.parse(t);
+    return typeof v === 'object' && v !== null ? v : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** True when `raw` is a JSON-encoded object or array. */
 export function isStructured(raw: string): boolean {
-  const t = raw.trim();
-  if (t[0] !== '{' && t[0] !== '[') return false;
-  try {
-    const v = JSON.parse(t);
-    return typeof v === 'object' && v !== null;
-  } catch {
-    return false;
-  }
+  return tryParseStructured(raw) !== undefined;
 }
 
 /** Parse a raw query-param value. Caller must guard with {@link isStructured}. */
@@ -107,8 +117,9 @@ export function isContainer(value: unknown): boolean {
 
 /**
  * Immutably rename an object key at `path` inside `root`, preserving entry order.
- * Returns `root` unchanged if `newKey === oldKey`, `newKey` is empty, or the
- * target is not a plain object.
+ * Returns `root` unchanged if `newKey === oldKey`, `newKey` is empty, the
+ * target is not a plain object, or `newKey` already exists on the target
+ * (renaming onto an existing key would silently drop one of the two values).
  */
 export function renameKeyAtPath(
   root: unknown,
@@ -120,6 +131,7 @@ export function renameKeyAtPath(
   const target = getAtPath(root, path);
   if (typeof target !== 'object' || target === null || Array.isArray(target)) return root;
   const obj = target as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(obj, newKey)) return root;
   const newObj: Record<string, unknown> = {};
   for (const k of Object.keys(obj)) {
     newObj[k === oldKey ? newKey : k] = obj[k];

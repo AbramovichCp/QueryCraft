@@ -1,11 +1,11 @@
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import type { QueryParam } from '@/types';
-import { parseStructuredValue, shortPreview } from '@/lib/structuredParam';
-import { ParamKeyInput } from '../ParamKeyInput';
-import { ParamValueInput } from '../ParamValueInput';
+import { tryParseStructured, shortPreview } from '@/lib/structuredParam';
+import { ParamTextInput } from '../ParamTextInput';
 import { BooleanToggle } from '../BooleanToggle';
 import { RemoveParamButton } from '../RemoveParamButton';
-import { IconCheck, IconCopy } from '../icons';
+import { IconChevronRightSmall } from '../icons';
+import { CopyButton } from './CopyButton';
 import styles from './ParamRow.module.css';
 
 interface ParamRowProps {
@@ -27,27 +27,7 @@ export function ParamRow({
 }: ParamRowProps) {
   const keyId = useId();
   const valueId = useId();
-  const [copiedField, setCopiedField] = useState<'key' | 'value' | null>(null);
-
-  function handleCopy(text: string, field: 'key' | 'value') {
-    if (!text) return;
-    void navigator.clipboard.writeText(text).then(() => {
-      setCopiedField(field);
-      window.setTimeout(() => setCopiedField(null), 1500);
-    });
-  }
-
-  const isBool = param.type === 'boolean';
-  const isStructured = param.type === 'structured';
-
-  let preview = '';
-  if (isStructured) {
-    try {
-      preview = shortPreview(parseStructuredValue(param.value));
-    } catch {
-      preview = param.value;
-    }
-  }
+  const keyName = param.key || '(empty key)';
 
   return (
     <li className={styles.row}>
@@ -56,102 +36,111 @@ export function ParamRow({
           Parameter key
         </label>
         <div className={styles.fieldWrap}>
-          <ParamKeyInput
+          <ParamTextInput
             id={keyId}
+            variant="key"
             value={param.key}
             aria-label={`Key for parameter ${param.key || '(empty)'}`}
             onChange={(next) => onKeyChange(param.id, next)}
           />
-          <button
-            className={`${styles.copyBtn}${copiedField === 'key' ? ` ${styles.copied}` : ''}`}
-            onClick={() => handleCopy(param.key, 'key')}
-            aria-label={`Copy key "${param.key}"`}
-            tabIndex={-1}
-          >
-            {copiedField === 'key' ? <IconCheck /> : <IconCopy />}
-          </button>
+          <CopyButton text={param.key} aria-label={`Copy key "${param.key}"`} />
         </div>
       </div>
 
       <div className={styles.valueCell}>
-        {isBool ? (
-          <>
-            <label htmlFor={valueId} className="visually-hidden">
-              {`Boolean value for ${param.key}`}
-            </label>
-            <div className={styles.fieldWrap}>
-              <BooleanToggle
-                id={valueId}
-                value={param.value.toLowerCase() === 'true'}
-                aria-label={`Toggle boolean value for ${param.key}`}
-                onChange={() => onToggleBoolean(param.id)}
-              />
-              <button
-                className={`${styles.copyBtn}${copiedField === 'value' ? ` ${styles.copied}` : ''}`}
-                onClick={() => handleCopy(param.value, 'value')}
-                aria-label={`Copy value "${param.value}"`}
-                tabIndex={-1}
-              >
-                {copiedField === 'value' ? <IconCheck /> : <IconCopy />}
-              </button>
-            </div>
-          </>
-        ) : isStructured ? (
-          <div className={styles.structuredValue}>
-            <span className={styles.structuredPreview}>{preview}</span>
-            <button
-              className={styles.expandBtn}
-              onClick={onExpand}
-              aria-label={`Expand structured value for ${param.key}`}
-              title="Expand structured value"
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path
-                  d="M4.5 3L7.5 6L4.5 9"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            <button
-              className={`${styles.copyBtnInline}${copiedField === 'value' ? ` ${styles.copied}` : ''}`}
-              onClick={() => handleCopy(param.value, 'value')}
-              aria-label={`Copy structured value for ${param.key}`}
-              tabIndex={-1}
-            >
-              {copiedField === 'value' ? <IconCheck /> : <IconCopy />}
-            </button>
-          </div>
-        ) : (
-          <>
-            <label htmlFor={valueId} className="visually-hidden">
-              {`Value for parameter ${param.key}`}
-            </label>
-            <div className={styles.fieldWrap}>
-              <ParamValueInput
-                id={valueId}
-                value={param.value}
-                aria-label={`Value for parameter ${param.key || '(empty key)'}`}
-                onChange={(next) => onValueChange(param.id, next)}
-              />
-              <button
-                className={`${styles.copyBtn}${copiedField === 'value' ? ` ${styles.copied}` : ''}`}
-                onClick={() => handleCopy(param.value, 'value')}
-                aria-label={`Copy value for parameter ${param.key || '(empty key)'}`}
-                tabIndex={-1}
-              >
-                {copiedField === 'value' ? <IconCheck /> : <IconCopy />}
-              </button>
-            </div>
-          </>
-        )}
+        <ValueCell
+          param={param}
+          valueId={valueId}
+          keyName={keyName}
+          onValueChange={onValueChange}
+          onToggleBoolean={onToggleBoolean}
+          onExpand={onExpand}
+        />
       </div>
 
       <div className={styles.removeCell}>
         <RemoveParamButton paramKey={param.key} onRemove={() => onRemove(param.id)} />
       </div>
     </li>
+  );
+}
+
+interface ValueCellProps {
+  param: QueryParam;
+  valueId: string;
+  keyName: string;
+  onValueChange: (id: string, value: string) => void;
+  onToggleBoolean: (id: string) => void;
+  onExpand?: () => void;
+}
+
+/** Renders the editor matching the param's detected type: toggle, JSON preview, or text. */
+function ValueCell({
+  param,
+  valueId,
+  keyName,
+  onValueChange,
+  onToggleBoolean,
+  onExpand,
+}: ValueCellProps) {
+  if (param.type === 'boolean') {
+    return (
+      <>
+        <label htmlFor={valueId} className="visually-hidden">
+          {`Boolean value for ${param.key}`}
+        </label>
+        <div className={styles.fieldWrap}>
+          <BooleanToggle
+            id={valueId}
+            value={param.value.toLowerCase() === 'true'}
+            aria-label={`Toggle boolean value for ${param.key}`}
+            onChange={() => onToggleBoolean(param.id)}
+          />
+          <CopyButton text={param.value} aria-label={`Copy value "${param.value}"`} />
+        </div>
+      </>
+    );
+  }
+
+  if (param.type === 'structured') {
+    const parsed = tryParseStructured(param.value);
+    const preview = parsed === undefined ? param.value : shortPreview(parsed);
+    return (
+      <div className={styles.structuredValue}>
+        <span className={styles.structuredPreview}>{preview}</span>
+        <button
+          type="button"
+          className={styles.expandBtn}
+          onClick={onExpand}
+          aria-label={`Expand structured value for ${param.key}`}
+          title="Expand structured value"
+        >
+          <IconChevronRightSmall />
+        </button>
+        <CopyButton
+          text={param.value}
+          aria-label={`Copy structured value for ${param.key}`}
+          variant="inline"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <label htmlFor={valueId} className="visually-hidden">
+        {`Value for parameter ${param.key}`}
+      </label>
+      <div className={styles.fieldWrap}>
+        <ParamTextInput
+          id={valueId}
+          variant="value"
+          value={param.value}
+          aria-label={`Value for parameter ${keyName}`}
+          onChange={(next) => onValueChange(param.id, next)}
+        />
+        <CopyButton text={param.value} aria-label={`Copy value for parameter ${keyName}`} />
+      </div>
+    </>
   );
 }

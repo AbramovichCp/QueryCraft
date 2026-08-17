@@ -214,4 +214,14 @@ describe('renameKeyAtPath', () => {
     renameKeyAtPath(root, [], 'a', 'b');
     expect(root).toEqual({ a: 1 });
   });
+
+  it('refuses to rename onto an existing key (would lose a value)', () => {
+    const root = { a: 1, b: 2 };
+    expect(renameKeyAtPath(root, [], 'a', 'b')).toBe(root);
+  });
+
+  it('refuses collision at a nested path', () => {
+    const root = { nested: { x: 10, y: 20 } };
+    expect(renameKeyAtPath(root, ['nested'], 'x', 'y')).toBe(root);
+  });
 });

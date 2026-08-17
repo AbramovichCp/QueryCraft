@@ -91,6 +91,37 @@ describe('parseUrl', () => {
     const result = parseUrl('https://example.com/?q=hello%20world');
     expect(result.params[0].value).toBe('hello world');
   });
+
+  it('keeps the real query string when a hash query is also present', () => {
+    const result = parseUrl('https://app.com/path?main=1#/route?foo=bar');
+    expect(result.hashQuery).toBe(true);
+    expect(result.base).toBe('https://app.com/path?main=1');
+    expect(result.params).toHaveLength(1);
+    expect(result.params[0]).toMatchObject({ key: 'foo', value: 'bar' });
+    // Round trip must not drop ?main=1.
+    expect(serializeUrl(result)).toBe('https://app.com/path?main=1#/route?foo=bar');
+    expect(serializeUrlForNav(result)).toBe('https://app.com/path?main=1#/route?foo=bar');
+  });
+
+  it('does not treat an anchor ending in "?" as a hash query', () => {
+    const result = parseUrl('https://en.wikipedia.org/wiki/Foo#Why?');
+    expect(result.hashQuery).toBe(false);
+    expect(result.fragment).toBe('#Why?');
+    expect(serializeUrl(result)).toBe('https://en.wikipedia.org/wiki/Foo#Why?');
+  });
+
+  it('builds a correct base for file: URLs', () => {
+    const result = parseUrl('file:///tmp/page.html?x=1');
+    expect(result.base).toBe('file:///tmp/page.html');
+    expect(result.params[0]).toMatchObject({ key: 'x', value: '1' });
+    expect(serializeUrl(result)).toBe('file:///tmp/page.html?x=1');
+  });
+
+  it('preserves credentials and port in the base', () => {
+    const result = parseUrl('https://user:pass@example.com:8080/x?a=1');
+    expect(result.base).toBe('https://user:pass@example.com:8080/x');
+    expect(serializeUrl(result)).toBe('https://user:pass@example.com:8080/x?a=1');
+  });
 });
 
 describe('serializeUrl', () => {

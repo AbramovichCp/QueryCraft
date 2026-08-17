@@ -64,6 +64,15 @@ export function UrlPreview({ parsed, onUrlChange }: UrlPreviewProps) {
     setLocalValue(serialized);
   };
 
+  // Enter commits (URLs can't contain raw newlines anyway — the URL parser
+  // silently strips them, which would leave the field lying about the state).
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      e.currentTarget.blur();
+    }
+  };
+
   return (
     <section aria-label="URL editor" className={styles.root}>
       <div className={styles.editorWrapper}>
@@ -74,6 +83,7 @@ export function UrlPreview({ parsed, onUrlChange }: UrlPreviewProps) {
           className={styles.textarea}
           value={localValue}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           onFocus={() => { focusedRef.current = true; }}
           onBlur={handleBlur}
           spellCheck={false}

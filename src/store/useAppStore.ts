@@ -69,7 +69,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   setCurrentUrl: (rawUrl) => {
     try {
       const parsed = parseUrl(rawUrl);
-      set({ currentParsed: { ...parsed, params: parsed.params.map((p) => ({ ...p })) } });
+      // Re-parsing generates fresh ids; adopt the previous id where the row
+      // (same position, same key) clearly survived the edit. Otherwise every
+      // keystroke in the URL field would remount all param rows.
+      const prev = get().currentParsed?.params ?? [];
+      const params = parsed.params.map((p, i) =>
+        prev[i] && prev[i].key === p.key ? { ...p, id: prev[i].id } : p,
+      );
+      set({ currentParsed: { ...parsed, params } });
     } catch {
       // Invalid URL while the user is still typing — ignore silently.
     }

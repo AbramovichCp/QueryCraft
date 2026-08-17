@@ -1,8 +1,10 @@
 import type { ChangeEvent } from 'react';
-import styles from './ParamValueInput.module.css';
+import styles from './ParamTextInput.module.css';
 
-interface ParamValueInputProps {
+interface ParamTextInputProps {
   id: string;
+  /** "key" renders in the accent color; "value" gets ellipsis + focus expand. */
+  variant: 'key' | 'value';
   value: string;
   placeholder?: string;
   'aria-label': string;
@@ -10,14 +12,16 @@ interface ParamValueInputProps {
   onEnter?: () => void;
 }
 
-export function ParamValueInput({
+/** Monospace text field for a parameter key or value cell. */
+export function ParamTextInput({
   id,
+  variant,
   value,
   placeholder,
   onChange,
   onEnter,
   'aria-label': ariaLabel,
-}: ParamValueInputProps) {
+}: ParamTextInputProps) {
   function onInput(e: ChangeEvent<HTMLInputElement>) {
     onChange(e.target.value);
   }
@@ -33,7 +37,7 @@ export function ParamValueInput({
     <input
       id={id}
       type="text"
-      className={styles.input}
+      className={`${styles.input} ${styles[variant]}`}
       value={value}
       placeholder={placeholder}
       aria-label={ariaLabel}

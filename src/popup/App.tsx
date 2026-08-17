@@ -44,6 +44,7 @@ export function App() {
   const { links, groups, saveLink, updateLink, deleteLink, createGroup } = useSavedLinks();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<'list' | 'save'>('list');
 
   /* ---------- Action handlers ---------- */
 
@@ -76,36 +77,60 @@ export function App() {
   }, [navUrl, copy, announce]);
 
   const handleOpenDrawer = useCallback(() => {
+    setDrawerMode('list');
     setDrawerOpen(true);
+  }, []);
+
+  /** The Action bar's "Save" button jumps straight to the save form. */
+  const handleOpenSaveDrawer = useCallback(() => {
+    setDrawerMode('save');
+    setDrawerOpen(true);
+  }, []);
+
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerOpen(false);
   }, []);
 
   const handleUpdateLink = useCallback(
     (id: string, label: string | undefined, groupId: string) => {
-      void updateLink(id, label, groupId).then(() => {
-        announce('URL updated.');
-      });
+      void updateLink(id, label, groupId).then(
+        () => announce('URL updated.'),
+        () => announce('Failed to update URL.'),
+      );
     },
     [updateLink, announce],
   );
 
   const handleSaveLink = useCallback(
     ({ url, label, groupId }: { url: string; label?: string; groupId: string }) => {
-      void saveLink({ url, label, groupId }).then(() => {
-        announce('URL saved.');
-      });
+      void saveLink({ url, label, groupId }).then(
+        () => announce('URL saved.'),
+        () => announce('Failed to save URL.'),
+      );
     },
     [saveLink, announce],
+  );
+
+  const handleDeleteLink = useCallback(
+    (id: string) => {
+      void deleteLink(id).then(
+        () => announce('Saved URL deleted.'),
+        () => announce('Failed to delete saved URL.'),
+      );
+    },
+    [deleteLink, announce],
   );
 
   const handleLoadSavedLink = useCallback(
     (url: string) => {
       const tabId =
-        tabState.status === 'ready'
+        tabState.status === 'ready' || tabState.status === 'unsupported'
           ? tabState.tabId
-          : tabState.status === 'unsupported'
-            ? tabState.tabId
-            : undefined;
-      if (tabId === undefined) return;
+          : undefined;
+      if (tabId === undefined) {
+        announce('Cannot load the saved URL: no editable tab.');
+        return;
+      }
       try {
         // Replace current editor state with the saved URL without touching the actual tab.
         // User can click Apply if they want to navigate.
@@ -130,14 +155,9 @@ export function App() {
     () => [
       { key: 'Enter', mod: true, preventDefault: true, handler: () => void handleApply() },
       { key: 's', mod: true, preventDefault: true, handler: handleOpenDrawer },
-      {
-        key: 'Escape',
-        handler: () => {
-          if (drawerOpen) setDrawerOpen(false);
-        },
-      },
+      { key: 'Escape', handler: handleCloseDrawer },
     ],
-    [handleApply, handleOpenDrawer, drawerOpen],
+    [handleApply, handleOpenDrawer, handleCloseDrawer],
   );
   useKeyboardShortcuts(shortcuts);
 
@@ -193,7 +213,7 @@ export function App() {
             onApply={() => void handleApply()}
             onReset={handleReset}
             onCopy={() => void handleCopy()}
-            onSave={handleOpenDrawer}
+            onSave={handleOpenSaveDrawer}
             copied={copied}
             applyDisabled={!navUrl}
           />
@@ -202,13 +222,14 @@ export function App() {
 
       <SavedLinksDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        initialMode={drawerMode}
+        onClose={handleCloseDrawer}
         currentUrl={currentUrl}
         links={links}
         groups={groups}
         onSave={handleSaveLink}
         onUpdateLink={handleUpdateLink}
-        onDeleteLink={(id) => void deleteLink(id)}
+        onDeleteLink={handleDeleteLink}
         onCreateGroup={createGroup}
         onLoadLink={handleLoadSavedLink}
       />

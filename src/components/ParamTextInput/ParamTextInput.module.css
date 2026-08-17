@@ -1,31 +1,43 @@
 .input {
   width: 100%;
   padding: 8px 10px;
-  background: var(--color-input-bg);
   border: 1px solid var(--color-input-border);
   border-radius: var(--radius-md);
-  color: var(--color-text-primary);
   font-family: var(--font-mono);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-tight);
   min-height: var(--min-target);
-  text-overflow: ellipsis;
   transition: border-color var(--transition-fast);
 }
 
 .input::placeholder {
   color: var(--color-text-muted);
+  font-weight: 400;
 }
 
 .input:hover {
   border-color: var(--color-border-strong);
 }
 
+/* Key cell: accent color on the alt background, slightly bolder. */
+.key {
+  background: var(--color-input-bg-alt);
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+/* Value cell: ellipsize long values… */
+.value {
+  background: var(--color-input-bg);
+  color: var(--color-text-primary);
+  text-overflow: ellipsis;
+}
+
 /*
- * On focus we expand vertically so long values are fully visible.
+ * …and on focus expand vertically so they're fully visible.
  * Focus-based rather than hover-based so keyboard users get the same affordance.
  */
-.input:focus {
+.value:focus {
   text-overflow: clip;
   white-space: normal;
   word-break: break-all;

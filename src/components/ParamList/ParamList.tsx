@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { QueryParam } from '@/types';
+import { isEditableTarget } from '@/lib/dom';
 import { StackFrame } from '../JsonStack';
 import type { FrameInfo } from '../JsonStack';
 import { ParamRow } from '../ParamRow';
@@ -27,10 +28,15 @@ export function ParamList({
   const [frames, setFrames] = useState<FrameInfo[]>([]);
   const [viewMode, setViewMode] = useState<'structured' | 'raw'>('structured');
 
-  // Keyboard: Esc pops one frame, Cmd/Ctrl+Backspace pops all
+  // Keyboard: Esc pops one frame, Cmd/Ctrl+Backspace pops all.
+  // Both are skipped when the key was already consumed (e.g. cancelling an
+  // inline JSON edit calls preventDefault) or aimed at an editable field —
+  // Esc in the raw JSON textarea must not silently discard the draft, and
+  // Cmd+Backspace in an input is "delete to line start", not "close all".
   useEffect(() => {
     if (frames.length === 0) return;
     function handleKeyDown(e: KeyboardEvent) {
+      if (e.defaultPrevented || isEditableTarget(e.target)) return;
       if (e.key === 'Escape') {
         e.preventDefault();
         setFrames((prev) => (prev.length <= 1 ? [] : prev.slice(0, -1)));
@@ -91,7 +97,7 @@ export function ParamList({
         />
       ) : (
         <>
-          <ul className={styles.list} role="list">
+          <ul className={styles.list}>
             {params.map((param) => (
               <ParamRow
                 key={param.id}

@@ -21,12 +21,16 @@ export function useTheme(): {
   const [preference, setPreferenceState] = useState<ThemePreference>('system');
   const [resolved, setResolved] = useState<ResolvedTheme>(resolveSystemTheme());
 
-  // Load persisted preference once.
+  // Load persisted preference once. On storage failure keep the "system"
+  // default rather than surfacing an unhandled rejection.
   useEffect(() => {
     let cancelled = false;
-    storage.getTheme().then((pref) => {
-      if (!cancelled) setPreferenceState(pref);
-    });
+    storage.getTheme().then(
+      (pref) => {
+        if (!cancelled) setPreferenceState(pref);
+      },
+      () => undefined,
+    );
     return () => {
       cancelled = true;
     };
