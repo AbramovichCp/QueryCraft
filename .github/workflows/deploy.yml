@@ -54,6 +54,18 @@ jobs:
           done
           [ "$missing" -eq 0 ] || exit 1
 
+          # GitHub stores a secret byte for byte, including a trailing newline
+          # left over from a copy-paste. Google rejects such a value with the
+          # same "invalid_client" it uses for a genuinely wrong secret, so an
+          # invisible character is indistinguishable from a bad credential.
+          for name in EXTENSION_ID CLIENT_ID CLIENT_SECRET REFRESH_TOKEN; do
+            value="${!name}"
+            trimmed="$(printf '%s' "$value" | tr -d '[:space:]')"
+            if [ "$value" != "$trimmed" ]; then
+              echo "::warning::$name contains whitespace (${#value} chars raw vs ${#trimmed} trimmed) — it is trimmed before use, but fix the secret"
+            fi
+          done
+
           case "$CLIENT_ID" in
             *.apps.googleusercontent.com) ;;
             *) echo "::warning::CLIENT_ID does not end with .apps.googleusercontent.com" ;;
@@ -61,6 +73,10 @@ jobs:
           case "$REFRESH_TOKEN" in
             1//*) ;;
             *) echo "::warning::REFRESH_TOKEN does not start with 1// — is this the right value?" ;;
+          esac
+          case "$CLIENT_SECRET" in
+            GOCSPX-*) ;;
+            *) echo "::warning::CLIENT_SECRET does not start with GOCSPX- — is this an OAuth client secret?" ;;
           esac
 
       - name: Setup Node.js
@@ -133,6 +149,12 @@ jobs:
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
         run: |
+          # Defensive trim — see the note in the preflight step.
+          EXTENSION_ID="$(printf '%s' "$EXTENSION_ID" | tr -d '[:space:]')"
+          CLIENT_ID="$(printf '%s' "$CLIENT_ID" | tr -d '[:space:]')"
+          CLIENT_SECRET="$(printf '%s' "$CLIENT_SECRET" | tr -d '[:space:]')"
+          REFRESH_TOKEN="$(printf '%s' "$REFRESH_TOKEN" | tr -d '[:space:]')"
+
           npx chrome-webstore-upload-cli@3 upload \
             --source extension.zip \
             --extension-id "$EXTENSION_ID" \
