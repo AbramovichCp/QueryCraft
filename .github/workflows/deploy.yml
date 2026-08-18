@@ -32,6 +32,37 @@ jobs:
           ref: release
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Runs before the version bump on purpose: a missing or malformed
+      # credential must not burn a version number. Prints lengths only —
+      # never the values — so a truncated or swapped secret is obvious.
+      - name: Verify store credentials
+        env:
+          EXTENSION_ID: ${{ secrets.EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
+        run: |
+          missing=0
+          for name in EXTENSION_ID CLIENT_ID CLIENT_SECRET REFRESH_TOKEN; do
+            value="${!name}"
+            if [ -z "$value" ]; then
+              echo "::error::$name is empty or not set in repository secrets"
+              missing=1
+            else
+              echo "$name: ${#value} chars"
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+
+          case "$CLIENT_ID" in
+            *.apps.googleusercontent.com) ;;
+            *) echo "::warning::CLIENT_ID does not end with .apps.googleusercontent.com" ;;
+          esac
+          case "$REFRESH_TOKEN" in
+            1//*) ;;
+            *) echo "::warning::REFRESH_TOKEN does not start with 1// — is this the right value?" ;;
+          esac
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -96,13 +127,18 @@ jobs:
           echo "ZIP size: $(du -h extension.zip | cut -f1)"
 
       - name: Upload to Chrome Web Store
+        env:
+          EXTENSION_ID: ${{ secrets.EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
         run: |
           npx chrome-webstore-upload-cli@3 upload \
             --source extension.zip \
-            --extension-id ${{ secrets.EXTENSION_ID }} \
-            --client-id ${{ secrets.CLIENT_ID }} \
-            --client-secret ${{ secrets.CLIENT_SECRET }} \
-            --refresh-token ${{ secrets.REFRESH_TOKEN }} \
+            --extension-id "$EXTENSION_ID" \
+            --client-id "$CLIENT_ID" \
+            --client-secret "$CLIENT_SECRET" \
+            --refresh-token "$REFRESH_TOKEN" \
             --auto-publish
 
       - name: Tag release
