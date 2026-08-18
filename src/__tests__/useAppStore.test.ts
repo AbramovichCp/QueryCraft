@@ -79,6 +79,25 @@ describe('setCurrentUrl', () => {
     useAppStore.getState().setCurrentUrl('totally invalid');
     expect(useAppStore.getState().currentParsed).toEqual(before);
   });
+
+  it('keeps param ids stable across re-parses when position+key survive', () => {
+    useAppStore.getState().loadUrl('https://example.com/?a=1&b=2', 1);
+    const [a, b] = useAppStore.getState().currentParsed!.params;
+    // Simulate typing in the URL field: value of `a` changed, keys unchanged.
+    useAppStore.getState().setCurrentUrl('https://example.com/?a=99&b=2');
+    const after = useAppStore.getState().currentParsed!.params;
+    expect(after[0].id).toBe(a.id);
+    expect(after[0].value).toBe('99');
+    expect(after[1].id).toBe(b.id);
+  });
+
+  it('assigns a fresh id when the key at a position changes', () => {
+    useAppStore.getState().loadUrl('https://example.com/?a=1', 1);
+    const [a] = useAppStore.getState().currentParsed!.params;
+    useAppStore.getState().setCurrentUrl('https://example.com/?renamed=1');
+    const after = useAppStore.getState().currentParsed!.params;
+    expect(after[0].id).not.toBe(a.id);
+  });
 });
 
 describe('updateParamKey', () => {
@@ -134,6 +153,16 @@ describe('toggleBooleanParam', () => {
 
   it('does nothing when currentParsed is null', () => {
     expect(() => useAppStore.getState().toggleBooleanParam('x')).not.toThrow();
+  });
+
+  it('preserves the original casing when toggling', () => {
+    useAppStore.getState().loadUrl('https://example.com/?a=TRUE&b=False', 1);
+    const [a, b] = useAppStore.getState().currentParsed!.params;
+    useAppStore.getState().toggleBooleanParam(a.id);
+    useAppStore.getState().toggleBooleanParam(b.id);
+    const after = useAppStore.getState().currentParsed!.params;
+    expect(after[0].value).toBe('FALSE');
+    expect(after[1].value).toBe('True');
   });
 });
 

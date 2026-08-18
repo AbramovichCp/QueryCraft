@@ -22,11 +22,12 @@ export interface QueryParam {
  *
  * When `hashQuery` is true the params come from the hash's query string
  * (hash-router pattern: https://app.com/#/route?param=value).
- * In that case `fragment` holds only the hash path (e.g. "#/route") and
- * serialization appends params after a `?` inside the fragment.
+ * In that case `fragment` holds only the hash path (e.g. "#/route"),
+ * serialization appends params after a `?` inside the fragment, and any real
+ * (pre-`#`) query string is kept verbatim as part of `base` so it isn't lost.
  */
 export interface ParsedUrl {
-  base: string; // origin + pathname, e.g. "https://example.com/api/v1/search"
+  base: string; // URL without query/fragment, e.g. "https://example.com/api/v1/search"
   params: QueryParam[];
   fragment: string; // includes leading "#" or empty string
   hashQuery: boolean; // true when params live inside the hash fragment
@@ -46,7 +47,11 @@ export interface Group {
   createdAt: number;
 }
 
-export type ThemePreference = 'light' | 'dark' | 'system';
+/**
+ * Chosen accent color as a hex string, or `null` for the monochrome default.
+ * The theme itself is not a preference — it always follows the OS.
+ */
+export type AccentColor = string | null;
 
 /** Special state when the active tab's URL is a browser-internal page we can't edit. */
 export type TabLoadState =

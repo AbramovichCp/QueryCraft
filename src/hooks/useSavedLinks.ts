@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { DEFAULT_GROUP_ID, storage } from '@/lib/storage';
+import { generateId } from '@/lib/id';
 import type { Group, SavedLink } from '@/types';
-
-function generateId(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
-  return `id_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-}
 
 export function useSavedLinks(): {
   links: SavedLink[];
@@ -25,11 +21,16 @@ export function useSavedLinks(): {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [l, g] = await Promise.all([storage.getSavedLinks(), storage.getGroups()]);
-      if (cancelled) return;
-      setLinks(l);
-      setGroups(g);
-      setIsLoading(false);
+      try {
+        const [l, g] = await Promise.all([storage.getSavedLinks(), storage.getGroups()]);
+        if (cancelled) return;
+        setLinks(l);
+        setGroups(g);
+      } catch {
+        // Storage unavailable — keep empty defaults; saving will surface its own error.
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     })();
     return () => {
       cancelled = true;

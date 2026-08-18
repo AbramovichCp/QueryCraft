@@ -29,7 +29,10 @@ export function JsonLeafInput({ value, onCommit }: JsonLeafInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (editing) inputRef.current?.select();
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
   }, [editing]);
 
   function startEdit() {
@@ -52,7 +55,6 @@ export function JsonLeafInput({ value, onCommit }: JsonLeafInputProps) {
         ref={inputRef}
         className={styles.input}
         value={draft}
-        autoFocus
         style={{ width: Math.max(60, draft.length * 8 + 16) }}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}

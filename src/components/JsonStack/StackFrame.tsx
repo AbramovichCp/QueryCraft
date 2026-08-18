@@ -1,11 +1,13 @@
 import type { QueryParam } from '@/types';
 import {
-  parseStructuredValue,
+  tryParseStructured,
   serializeStructuredValue,
   getAtPath,
   setAtPath,
   renameKeyAtPath,
 } from '@/lib/structuredParam';
+import { Button } from '../Button';
+import { IconChevronLeft } from '../icons';
 import { JsonTree } from './JsonTree';
 import { RawJsonEditor } from './RawJsonEditor';
 import styles from './StackFrame.module.css';
@@ -41,14 +43,23 @@ export function StackFrame({
 }: StackFrameProps) {
   const currentFrame = frames[frames.length - 1];
   const param = params.find((p) => p.id === currentFrame.paramId);
+  const rootValue = param === undefined ? undefined : tryParseStructured(param.value);
 
-  if (!param) return null;
-
-  let rootValue: unknown;
-  try {
-    rootValue = parseStructuredValue(param.value);
-  } catch {
-    return null;
+  // The param was removed or its value stopped being valid JSON while the
+  // stack was open — offer a way back instead of a dead blank panel.
+  if (rootValue === undefined) {
+    return (
+      <div className={styles.frame}>
+        <div className={styles.body}>
+          <p className={styles.missing}>This value is no longer available.</p>
+        </div>
+        <div className={styles.footer}>
+          <Button variant="ghost" onClick={onPopAll} leadingIcon={<IconChevronLeft />}>
+            Back to parameters
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const frameValue = getAtPath(rootValue, currentFrame.path);
@@ -82,7 +93,7 @@ export function StackFrame({
       {/* Breadcrumb + Structured/Raw toggle */}
       <div className={styles.topBar}>
         <nav className={styles.breadcrumb} aria-label="JSON path">
-          <button className={styles.crumbRoot} onClick={onPopAll}>
+          <button type="button" className={styles.crumb} onClick={onPopAll}>
             params
           </button>
           {frames.map((f, i) => {
@@ -93,7 +104,7 @@ export function StackFrame({
                 {isCurrent ? (
                   <span className={styles.crumbCurrent}>{f.name}</span>
                 ) : (
-                  <button className={styles.crumbAncestor} onClick={() => onPopTo(i)}>
+                  <button type="button" className={styles.crumb} onClick={() => onPopTo(i)}>
                     {f.name}
                   </button>
                 )}
@@ -104,14 +115,18 @@ export function StackFrame({
 
         <div className={styles.toggle} role="group" aria-label="View mode">
           <button
+            type="button"
             className={`${styles.toggleBtn} ${viewMode === 'structured' ? styles.toggleActive : ''}`}
             onClick={() => onViewModeChange('structured')}
+            aria-pressed={viewMode === 'structured'}
           >
             Structured
           </button>
           <button
+            type="button"
             className={`${styles.toggleBtn} ${viewMode === 'raw' ? styles.toggleActive : ''}`}
             onClick={() => onViewModeChange('raw')}
+            aria-pressed={viewMode === 'raw'}
           >
             Raw JSON
           </button>
@@ -139,9 +154,14 @@ export function StackFrame({
 
       {/* Back button */}
       <div className={styles.footer}>
-        <button className={styles.backBtn} onClick={onPop} aria-label="Go back one level">
-          ← Back
-        </button>
+        <Button
+          variant="ghost"
+          onClick={onPop}
+          leadingIcon={<IconChevronLeft />}
+          aria-label="Go back one level"
+        >
+          Back
+        </Button>
       </div>
     </div>
   );

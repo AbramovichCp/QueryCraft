@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { isContainer, shortPreview } from '@/lib/structuredParam';
+import { IconChevronRight } from '../icons';
 import { JsonLeafInput } from './JsonLeafInput';
 import styles from './JsonTree.module.css';
 
@@ -13,13 +14,18 @@ interface JsonTreeProps {
 function EditableKey({ k, onCommit }: { k: string; onCommit: (newKey: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(k);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
 
   if (editing) {
     return (
       <input
+        ref={inputRef}
         className={styles.keyInput}
         value={draft}
-        autoFocus
         onChange={(e) => setDraft(e.target.value)}
         onBlur={() => {
           setEditing(false);
@@ -60,7 +66,7 @@ function EditableKey({ k, onCommit }: { k: string; onCommit: (newKey: string) =>
         }
       }}
     >
-      "{k}"
+      {`"${k}"`}
     </span>
   );
 }
@@ -107,22 +113,14 @@ export function JsonTree({ value, onPush, onLeafChange, onKeyChange }: JsonTreeP
             ) : isArr ? (
               <span className={styles.indexKey}>{k}</span>
             ) : (
-              <span className={styles.objectKey}>"{k}"</span>
+              <span className={styles.objectKey}>{`"${k}"`}</span>
             )}
             <span className={styles.colon}>{' : '}</span>
             {container ? (
               <>
                 <span className={styles.preview}>{shortPreview(v)}</span>
                 <span className={styles.chevron}>
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path
-                      d="M4.5 3L7.5 6L4.5 9"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <IconChevronRight />
                 </span>
               </>
             ) : (

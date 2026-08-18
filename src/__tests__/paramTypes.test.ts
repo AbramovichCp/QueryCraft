@@ -1,5 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { detectParamType } from '@/lib/paramTypes';
+import { detectParamType, flipBoolean } from '@/lib/paramTypes';
+
+describe('flipBoolean', () => {
+  it('flips lowercase', () => {
+    expect(flipBoolean('true')).toBe('false');
+    expect(flipBoolean('false')).toBe('true');
+  });
+
+  it('preserves all-caps casing', () => {
+    expect(flipBoolean('TRUE')).toBe('FALSE');
+    expect(flipBoolean('FALSE')).toBe('TRUE');
+  });
+
+  it('preserves capitalized casing', () => {
+    expect(flipBoolean('True')).toBe('False');
+    expect(flipBoolean('False')).toBe('True');
+  });
+});
 
 describe('detectParamType', () => {
   describe('boolean', () => {

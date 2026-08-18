@@ -3,8 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import '@/styles/global.css';
 
-// Chrome popup sizing can ignore CSS height in some cases; enforce it at runtime.
-const POPUP_WIDTH = '440px';
+// Chrome sizes the popup from the document box and can ignore CSS height in
+// some cases, so the dimensions are pinned at runtime as well.
+const POPUP_WIDTH = '380px';
 const POPUP_HEIGHT = '600px';
 document.documentElement.style.width = POPUP_WIDTH;
 document.documentElement.style.height = POPUP_HEIGHT;

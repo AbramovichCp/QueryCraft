@@ -87,31 +87,26 @@ describe('storage.setGroups', () => {
   });
 });
 
-describe('storage.getTheme', () => {
-  it('returns "system" as the default theme', async () => {
-    const theme = await storage.getTheme();
-    expect(theme).toBe('system');
+describe('storage.getAccent', () => {
+  it('returns null by default (monochrome)', async () => {
+    expect(await storage.getAccent()).toBeNull();
   });
 
-  it('returns stored theme', async () => {
-    await storage.setTheme('dark');
-    expect(await storage.getTheme()).toBe('dark');
+  it('returns the stored accent', async () => {
+    await storage.setAccent('#6690e0');
+    expect(await storage.getAccent()).toBe('#6690e0');
   });
 });
 
-describe('storage.setTheme', () => {
-  it('persists light theme', async () => {
-    await storage.setTheme('light');
-    expect(await storage.getTheme()).toBe('light');
+describe('storage.setAccent', () => {
+  it('persists an accent hex', async () => {
+    await storage.setAccent('#4fa98e');
+    expect(await storage.getAccent()).toBe('#4fa98e');
   });
 
-  it('persists dark theme', async () => {
-    await storage.setTheme('dark');
-    expect(await storage.getTheme()).toBe('dark');
-  });
-
-  it('persists system theme', async () => {
-    await storage.setTheme('system');
-    expect(await storage.getTheme()).toBe('system');
+  it('clears back to monochrome', async () => {
+    await storage.setAccent('#4fa98e');
+    await storage.setAccent(null);
+    expect(await storage.getAccent()).toBeNull();
   });
 });

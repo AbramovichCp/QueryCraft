@@ -1,0 +1,63 @@
+.input {
+  width: 100%;
+  min-width: 0;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-mono);
+  line-height: var(--line-height-tight);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+/*
+ * Key cell: borderless with a subtle fill so the key reads as a label rather
+ * than a second equal-weight field.
+ */
+.key {
+  background: var(--color-fill-subtle);
+  border: none;
+  padding: 6px 9px;
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.key:hover,
+.key:focus {
+  background: var(--color-fill-strong);
+}
+
+/* Value cell: a proper bordered input. */
+.value {
+  background: var(--color-surface-inset);
+  border: 1px solid var(--color-border);
+  padding: 6px 9px;
+  color: var(--color-text-body);
+  text-overflow: ellipsis;
+}
+
+.value:hover {
+  border-color: var(--color-border-strong);
+}
+
+.value:focus {
+  border-color: var(--color-border-focus);
+  text-overflow: clip;
+}
+
+/* Larger padding for the add-parameter card's fields. */
+.add {
+  background: var(--color-surface-inset);
+  border: 1px solid var(--color-fill-strong);
+  padding: 7px 9px;
+  font-family: var(--font-sans);
+  color: var(--color-text-body);
+}
+
+.add:hover {
+  border-color: var(--color-border-strong);
+}
+
+.add:focus {
+  border-color: var(--color-border-focus);
+}

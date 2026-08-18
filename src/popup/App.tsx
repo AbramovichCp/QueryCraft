@@ -3,6 +3,7 @@ import { useAppStore, selectCurrentUrl, selectNavUrl } from '@/store/useAppStore
 import { useActiveTabUrl } from '@/hooks/useActiveTabUrl';
 import { useClipboard } from '@/hooks/useClipboard';
 import { useTheme } from '@/hooks/useTheme';
+import { useAccent } from '@/hooks/useAccent';
 import { useSavedLinks } from '@/hooks/useSavedLinks';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { tabs } from '@/lib/tabs';
@@ -11,18 +12,19 @@ import { Header } from '@/components/Header';
 import { UrlPreview } from '@/components/UrlPreview';
 import { ParamList } from '@/components/ParamList';
 import { ActionBar } from '@/components/ActionBar';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { IconButton } from '@/components/IconButton';
-import { IconBookmark } from '@/components/icons';
-import { LiveRegion } from '@/components/LiveRegion';
+import { IconBookmark, IconSettings } from '@/components/icons';
+import { Toast } from '@/components/Toast';
 import { SavedLinksDrawer } from '@/components/SavedLinksDrawer';
+import { SettingsDrawer } from '@/components/SettingsDrawer';
 import { EmptyState } from '@/components/EmptyState';
 import styles from './App.module.css';
 
 export function App() {
   // Load URL on mount, hydrate theme, bind storage-backed saved links.
   useActiveTabUrl();
-  const { preference, setPreference } = useTheme();
+  const theme = useTheme();
+  const { accent, setAccent } = useAccent(theme);
 
   // Zustand store — individual selectors keep re-renders narrow.
   const tabState = useAppStore((s) => s.tabState);
@@ -38,12 +40,14 @@ export function App() {
   const announce = useAppStore((s) => s.announce);
 
   const currentUrl = useAppStore(selectCurrentUrl); // human-readable, for display
-  const navUrl = useAppStore(selectNavUrl);          // encoded, for Apply / Copy
+  const navUrl = useAppStore(selectNavUrl); // encoded, for Apply / Copy
 
   const { copied, copy } = useClipboard();
   const { links, groups, saveLink, updateLink, deleteLink, createGroup } = useSavedLinks();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<'list' | 'save'>('list');
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   /* ---------- Action handlers ---------- */
 
@@ -57,11 +61,9 @@ export function App() {
     if (currentTabState.status !== 'ready' || !currentNavUrl) return;
     try {
       await tabs.updateUrl(currentTabState.tabId, currentNavUrl);
-      announce('URL applied to the current tab.');
+      announce('URL applied to the current tab');
     } catch (err) {
-      announce(
-        `Failed to apply URL: ${err instanceof Error ? err.message : 'unknown error'}`,
-      );
+      announce(`Failed to apply: ${err instanceof Error ? err.message : 'unknown error'}`);
     }
   }, [announce]);
 
@@ -72,56 +74,94 @@ export function App() {
   const handleCopy = useCallback(async () => {
     if (!navUrl) return;
     const ok = await copy(navUrl);
-    announce(ok ? 'URL copied to clipboard.' : 'Failed to copy URL.');
+    announce(ok ? 'URL copied to clipboard' : 'Failed to copy URL');
   }, [navUrl, copy, announce]);
 
   const handleOpenDrawer = useCallback(() => {
+    setDrawerMode('list');
     setDrawerOpen(true);
+  }, []);
+
+  /** The action bar's "Save" button jumps straight to the save form. */
+  const handleOpenSaveDrawer = useCallback(() => {
+    setDrawerMode('save');
+    setDrawerOpen(true);
+  }, []);
+
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerOpen(false);
+  }, []);
+
+  const handleOpenSettings = useCallback(() => {
+    setSettingsOpen(true);
+  }, []);
+
+  const handleCloseSettings = useCallback(() => {
+    setSettingsOpen(false);
+  }, []);
+
+  /** Escape closes whichever panel is on top. */
+  const handleEscape = useCallback(() => {
+    setSettingsOpen(false);
+    setDrawerOpen(false);
   }, []);
 
   const handleUpdateLink = useCallback(
     (id: string, label: string | undefined, groupId: string) => {
-      void updateLink(id, label, groupId).then(() => {
-        announce('URL updated.');
-      });
+      void updateLink(id, label, groupId).then(
+        () => announce('Saved URL updated'),
+        () => announce('Failed to update saved URL'),
+      );
     },
     [updateLink, announce],
   );
 
   const handleSaveLink = useCallback(
     ({ url, label, groupId }: { url: string; label?: string; groupId: string }) => {
-      void saveLink({ url, label, groupId }).then(() => {
-        announce('URL saved.');
-      });
+      void saveLink({ url, label, groupId }).then(
+        () => announce('URL saved'),
+        () => announce('Failed to save URL'),
+      );
     },
     [saveLink, announce],
   );
 
+  const handleDeleteLink = useCallback(
+    (id: string) => {
+      void deleteLink(id).then(
+        () => announce('Saved URL deleted'),
+        () => announce('Failed to delete saved URL'),
+      );
+    },
+    [deleteLink, announce],
+  );
+
   const handleLoadSavedLink = useCallback(
     (url: string) => {
+      const snap = useAppStore.getState().tabState;
       const tabId =
-        tabState.status === 'ready'
-          ? tabState.tabId
-          : tabState.status === 'unsupported'
-            ? tabState.tabId
-            : undefined;
-      if (tabId === undefined) return;
+        snap.status === 'ready' || snap.status === 'unsupported' ? snap.tabId : undefined;
+      if (tabId === undefined) {
+        announce('Cannot load the saved URL: no editable tab');
+        return;
+      }
       try {
-        // Replace current editor state with the saved URL without touching the actual tab.
-        // User can click Apply if they want to navigate.
+        // Replace the editor state with the saved URL without touching the
+        // actual tab — the user can hit Apply to navigate.
         const parsed = parseUrl(url);
+        const snapshot = () => ({ ...parsed, params: parsed.params.map((p) => ({ ...p })) });
         useAppStore.setState({
           tabState: { status: 'ready', tabId, url },
-          initialParsed: { ...parsed, params: parsed.params.map((p) => ({ ...p })) },
-          currentParsed: { ...parsed, params: parsed.params.map((p) => ({ ...p })) },
-          announcement: 'Loaded saved URL into editor.',
+          initialParsed: snapshot(),
+          currentParsed: snapshot(),
+          announcement: 'Loaded saved URL',
         });
       } catch {
-        announce('Failed to load saved URL.');
+        announce('Failed to load saved URL');
       }
       setDrawerOpen(false);
     },
-    [tabState, announce],
+    [announce],
   );
 
   /* ---------- Keyboard shortcuts ---------- */
@@ -130,14 +170,9 @@ export function App() {
     () => [
       { key: 'Enter', mod: true, preventDefault: true, handler: () => void handleApply() },
       { key: 's', mod: true, preventDefault: true, handler: handleOpenDrawer },
-      {
-        key: 'Escape',
-        handler: () => {
-          if (drawerOpen) setDrawerOpen(false);
-        },
-      },
+      { key: 'Escape', handler: handleEscape },
     ],
-    [handleApply, handleOpenDrawer, drawerOpen],
+    [handleApply, handleOpenDrawer, handleEscape],
   );
   useKeyboardShortcuts(shortcuts);
 
@@ -145,12 +180,21 @@ export function App() {
 
   const headerActions = (
     <>
-      <ThemeToggle preference={preference} onChange={setPreference} />
+      <IconButton
+        aria-label="Settings"
+        title="Settings"
+        icon={<IconSettings />}
+        variant="bordered"
+        size="lg"
+        onClick={handleOpenSettings}
+      />
       <IconButton
         aria-label="Open saved URLs"
+        title="Saved URLs"
         icon={<IconBookmark />}
+        variant="bordered"
+        size="lg"
         onClick={handleOpenDrawer}
-        className={styles.bookmarkBtn}
       />
     </>
   );
@@ -177,9 +221,7 @@ export function App() {
       {tabState.status === 'ready' && currentParsed && (
         <>
           <div className={styles.scrollArea}>
-            <div className={styles.previewWrap}>
-              <UrlPreview parsed={currentParsed} onUrlChange={setCurrentUrl} />
-            </div>
+            <UrlPreview parsed={currentParsed} onUrlChange={setCurrentUrl} />
             <ParamList
               params={currentParsed.params}
               onKeyChange={updateKey}
@@ -193,27 +235,35 @@ export function App() {
             onApply={() => void handleApply()}
             onReset={handleReset}
             onCopy={() => void handleCopy()}
-            onSave={handleOpenDrawer}
+            onSave={handleOpenSaveDrawer}
             copied={copied}
             applyDisabled={!navUrl}
           />
         </>
       )}
 
+      <Toast message={announcement} />
+
       <SavedLinksDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        initialMode={drawerMode}
+        onClose={handleCloseDrawer}
         currentUrl={currentUrl}
         links={links}
         groups={groups}
         onSave={handleSaveLink}
         onUpdateLink={handleUpdateLink}
-        onDeleteLink={(id) => void deleteLink(id)}
+        onDeleteLink={handleDeleteLink}
         onCreateGroup={createGroup}
         onLoadLink={handleLoadSavedLink}
       />
 
-      <LiveRegion message={announcement} />
+      <SettingsDrawer
+        open={settingsOpen}
+        onClose={handleCloseSettings}
+        accent={accent}
+        onAccentChange={setAccent}
+      />
     </div>
   );
 }

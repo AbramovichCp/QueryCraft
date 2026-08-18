@@ -1,63 +1,72 @@
 .root {
-  margin: 0 var(--space-5);
-  padding: var(--space-1);
-  background: var(--color-surface);
+  display: block;
+}
+
+/* Grid stacking: the highlight layer sits behind a transparent textarea. */
+.editorWrapper {
+  display: grid;
+  /* Pin the single column to the container so the textarea below cannot
+     widen the grid past the popup. */
+  grid-template-columns: minmax(0, 1fr);
+  background: var(--color-surface-inset);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  border-radius: var(--radius-card);
+  max-height: 132px;
+  overflow-y: auto;
   transition: border-color var(--transition-fast);
 }
 
-.root:focus-within {
-  border-color: var(--color-focus);
+.editorWrapper:hover {
+  border-color: var(--color-border-strong);
 }
 
-/* Grid stacking: highlight div sits behind a transparent textarea */
-.editorWrapper {
-  display: grid;
-  min-height: 64px;
-  max-height: 160px;
-  overflow-y: auto;
+.editorWrapper:focus-within {
+  border-color: var(--color-border-focus);
+}
+
+.highlight,
+.textarea {
+  grid-area: 1 / 1;
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-mono);
+  line-height: var(--line-height-mono);
+  word-break: break-all;
+  box-sizing: border-box;
 }
 
 .highlight {
-  grid-area: 1 / 1;
-  padding: var(--space-3);
-  font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-relaxed);
-  color: var(--color-text-primary);
-  word-break: break-all;
+  color: var(--color-text-muted);
   white-space: pre-wrap;
   pointer-events: none;
   user-select: none;
-  box-sizing: border-box;
   overflow: hidden;
 }
 
+/* Keys carry the emphasis; separators recede. */
 .paramKey {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
+  font-weight: 500;
+}
+
+.paramValue {
+  color: var(--color-text-secondary);
 }
 
 .sep {
-  color: var(--color-text-muted);
+  color: var(--color-text-faint);
 }
 
 .textarea {
-  grid-area: 1 / 1;
   display: block;
   width: 100%;
-  padding: var(--space-3);
+  min-width: 0;
   background: transparent;
   border: none;
   outline: none;
   resize: none;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-relaxed);
   color: transparent;
   caret-color: var(--color-text-primary);
-  word-break: break-all;
-  box-sizing: border-box;
+  /* Grows in height with the URL; width stays pinned by the grid column. */
   field-sizing: content;
 }

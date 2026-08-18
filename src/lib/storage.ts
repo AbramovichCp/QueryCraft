@@ -1,4 +1,4 @@
-import type { SavedLink, Group, ThemePreference } from '@/types';
+import type { SavedLink, Group, AccentColor } from '@/types';
 
 /**
  * Adapter over chrome.storage.local.
@@ -11,7 +11,7 @@ import type { SavedLink, Group, ThemePreference } from '@/types';
 const KEYS = {
   savedLinks: 'qc.savedLinks',
   groups: 'qc.groups',
-  theme: 'qc.theme',
+  accent: 'qc.accent',
 } as const;
 
 export const DEFAULT_GROUP_ID = 'default';
@@ -52,11 +52,11 @@ export const storage = {
     await set(KEYS.groups, groups);
   },
 
-  async getTheme(): Promise<ThemePreference> {
-    return get<ThemePreference>(KEYS.theme, 'system');
+  async getAccent(): Promise<AccentColor> {
+    return get<AccentColor>(KEYS.accent, null);
   },
 
-  async setTheme(theme: ThemePreference): Promise<void> {
-    await set(KEYS.theme, theme);
+  async setAccent(accent: AccentColor): Promise<void> {
+    await set(KEYS.accent, accent);
   },
 };

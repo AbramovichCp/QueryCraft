@@ -1,19 +1,26 @@
+/*
+ * Four labelled buttons in a 380px panel leave only a couple of pixels of
+ * slack at the reference's paddings — and only when Inter is installed. With
+ * a wider fallback face the row overflowed and ate the 18px right padding.
+ * The gap is tightened to 6px and the labels are allowed to shrink so the
+ * padding is never the thing that gives.
+ */
 .root {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  background: var(--color-surface-raised);
+  padding: var(--space-7) var(--pad-inline);
   border-top: 1px solid var(--color-border);
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
-.primary,
-.secondary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
+.root > button {
+  min-width: 0;
+}
+
+/* Pushes Copy/Save to the trailing edge. */
+.spacer {
+  flex: 1;
+  min-width: 0;
 }

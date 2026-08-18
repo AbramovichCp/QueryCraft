@@ -14,17 +14,29 @@ body {
   padding: 0;
 }
 
+/*
+ * Headings and paragraphs keep their UA margins otherwise — at these small
+ * type sizes a stray `margin: 1em 0` silently doubles a card's header height.
+ * Spacing is owned by the layout, never by the text element.
+ */
+h1,
+h2,
+h3,
+h4,
+p,
+figure {
+  margin: 0;
+}
+
 html {
   font-family: var(--font-sans);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-md);
   line-height: var(--line-height-base);
   color: var(--color-text-primary);
-  background: var(--color-bg);
+  background: var(--color-bg-outer);
   width: var(--popup-width);
-  height: var(--popup-max-height);
-  border-radius: var(--radius-xl);
+  height: var(--popup-height);
   overflow: hidden;
-  /* Prevent font-size inflation on mobile-like viewports */
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -46,6 +58,13 @@ body {
   flex: 1;
   height: 100%;
   min-height: 100%;
+  /*
+   * Flex items default to min-width:auto, which refuses to shrink below the
+   * content's min-content width — a long unbroken URL would then push the
+   * whole panel wider than the popup. Opt out so the panel owns its width.
+   */
+  min-width: 0;
+  max-width: 100%;
 }
 
 button {
@@ -59,15 +78,26 @@ button {
 }
 
 input,
+select,
 textarea {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-faint);
+}
+
 /* ------------ Global focus ------------- */
 
-/* We keep outlines for keyboard users via :focus-visible. Mouse clicks stay clean. */
+/*
+ * The reference design signals focus only by lightening an input's border.
+ * That is not enough on its own for keyboard users, so the border treatment
+ * is kept per-component and a :focus-visible ring is layered on top —
+ * pointer interaction stays clean because :focus-visible excludes clicks.
+ */
 *:focus {
   outline: none;
 }
@@ -75,7 +105,6 @@ textarea {
 *:focus-visible {
   outline: var(--focus-ring-width) solid var(--color-focus);
   outline-offset: var(--focus-ring-offset);
-  border-radius: var(--radius-sm);
 }
 
 /* ------------ Utilities ------------- */
@@ -104,12 +133,23 @@ textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border-strong);
+  background: var(--color-fill-strong);
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+  background: var(--color-text-faint);
+}
+
+/*
+ * Applied for one frame while the theme flips. Without it, every element that
+ * transitions `background` (inputs, toggles, buttons) animates between the two
+ * palettes, so the switch reads as a smear rather than an instant change.
+ */
+html[data-theme-switching] *,
+html[data-theme-switching] *::before,
+html[data-theme-switching] *::after {
+  transition: none !important;
 }
 
 /* Respect reduced motion preference */
