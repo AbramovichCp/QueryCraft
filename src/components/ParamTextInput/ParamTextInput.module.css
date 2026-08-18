@@ -1,44 +1,63 @@
 .input {
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--color-input-border);
+  min-width: 0;
   border-radius: var(--radius-md);
   font-family: var(--font-mono);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-mono);
   line-height: var(--line-height-tight);
-  min-height: var(--min-target);
-  transition: border-color var(--transition-fast);
-}
-
-.input::placeholder {
-  color: var(--color-text-muted);
-  font-weight: 400;
-}
-
-.input:hover {
-  border-color: var(--color-border-strong);
-}
-
-/* Key cell: accent color on the alt background, slightly bolder. */
-.key {
-  background: var(--color-input-bg-alt);
-  color: var(--color-accent);
-  font-weight: 500;
-}
-
-/* Value cell: ellipsize long values… */
-.value {
-  background: var(--color-input-bg);
-  color: var(--color-text-primary);
-  text-overflow: ellipsis;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 /*
- * …and on focus expand vertically so they're fully visible.
- * Focus-based rather than hover-based so keyboard users get the same affordance.
+ * Key cell: borderless with a subtle fill so the key reads as a label rather
+ * than a second equal-weight field.
  */
+.key {
+  background: var(--color-fill-subtle);
+  border: none;
+  padding: 6px 9px;
+  font-weight: 600;
+  color: var(--color-text-strong);
+}
+
+.key:hover,
+.key:focus {
+  background: var(--color-fill-strong);
+}
+
+/* Value cell: a proper bordered input. */
+.value {
+  background: var(--color-surface-inset);
+  border: 1px solid var(--color-border);
+  padding: 6px 9px;
+  color: var(--color-text-body);
+  text-overflow: ellipsis;
+}
+
+.value:hover {
+  border-color: var(--color-border-strong);
+}
+
 .value:focus {
+  border-color: var(--color-border-focus);
   text-overflow: clip;
-  white-space: normal;
-  word-break: break-all;
+}
+
+/* Larger padding for the add-parameter card's fields. */
+.add {
+  background: var(--color-surface-inset);
+  border: 1px solid var(--color-fill-strong);
+  padding: 7px 9px;
+  font-family: var(--font-sans);
+  color: var(--color-text-body);
+}
+
+.add:hover {
+  border-color: var(--color-border-strong);
+}
+
+.add:focus {
+  border-color: var(--color-border-focus);
 }

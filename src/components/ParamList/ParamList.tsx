@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { QueryParam } from '@/types';
 import { isEditableTarget } from '@/lib/dom';
 import { StackFrame } from '../JsonStack';
 import type { FrameInfo } from '../JsonStack';
 import { ParamRow } from '../ParamRow';
 import { AddParamRow } from '../AddParamRow';
+import { SearchInput } from '../SearchInput';
 import styles from './ParamList.module.css';
 
 interface ParamListProps {
@@ -27,6 +28,13 @@ export function ParamList({
   const headingId = 'params-heading';
   const [frames, setFrames] = useState<FrameInfo[]>([]);
   const [viewMode, setViewMode] = useState<'structured' | 'raw'>('structured');
+  const [search, setSearch] = useState('');
+
+  const query = search.trim().toLowerCase();
+  const visibleParams = useMemo(
+    () => (query === '' ? params : params.filter((p) => p.key.toLowerCase().includes(query))),
+    [params, query],
+  );
 
   // Keyboard: Esc pops one frame, Cmd/Ctrl+Backspace pops all.
   // Both are skipped when the key was already consumed (e.g. cancelling an
@@ -62,43 +70,46 @@ export function ParamList({
     setFrames((prev) => (prev.length <= 1 ? [] : prev.slice(0, -1)));
   }
 
-  function popAll() {
-    setFrames([]);
+  if (frames.length > 0) {
+    return (
+      <StackFrame
+        frames={frames}
+        params={params}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        onValueChange={onValueChange}
+        onPop={popFrame}
+        onPopAll={() => setFrames([])}
+        onPopTo={(index) => setFrames((prev) => prev.slice(0, index + 1))}
+        onPush={pushFrame}
+      />
+    );
   }
-
-  function popTo(index: number) {
-    setFrames((prev) => prev.slice(0, index + 1));
-  }
-
-  const showStack = frames.length > 0;
 
   return (
-    <section className={styles.section} aria-labelledby={headingId}>
-      <div className={styles.header}>
-        <h2 id={headingId} className={styles.heading}>
-          Parameters
-        </h2>
-        <span className={styles.count} aria-label={`${params.length} parameters`}>
-          {params.length}
-        </span>
+    <>
+      <div className={styles.searchWrap}>
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Filter parameters"
+          label="Filter parameters by key"
+        />
       </div>
 
-      {showStack ? (
-        <StackFrame
-          frames={frames}
-          params={params}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          onValueChange={onValueChange}
-          onPop={popFrame}
-          onPopAll={popAll}
-          onPopTo={popTo}
-          onPush={pushFrame}
-        />
-      ) : (
-        <>
+      <section className={styles.section} aria-labelledby={headingId}>
+        <div className={styles.header}>
+          <h2 id={headingId} className={styles.heading}>
+            Parameters
+          </h2>
+          <span className={styles.count} aria-label={`${visibleParams.length} parameters shown`}>
+            {visibleParams.length}
+          </span>
+        </div>
+
+        {visibleParams.length > 0 && (
           <ul className={styles.list}>
-            {params.map((param) => (
+            {visibleParams.map((param) => (
               <ParamRow
                 key={param.id}
                 param={param}
@@ -114,9 +125,18 @@ export function ParamList({
               />
             ))}
           </ul>
-          <AddParamRow onAdd={onAdd} />
-        </>
-      )}
-    </section>
+        )}
+
+        {visibleParams.length === 0 && (
+          <p className={styles.empty}>
+            {params.length === 0
+              ? 'No parameters in this URL yet.'
+              : `No parameters match "${search.trim()}"`}
+          </p>
+        )}
+
+        <AddParamRow onAdd={onAdd} />
+      </section>
+    </>
   );
 }

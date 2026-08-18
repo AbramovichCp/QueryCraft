@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Group, SavedLink } from '@/types';
 import { Button } from '../Button';
 import { IconButton } from '../IconButton';
-import { IconChevronLeft, IconClose, IconEdit } from '../icons';
+import { IconChevronDown, IconClose, IconEdit, IconLoad } from '../icons';
 import styles from './SavedLinksDrawer.module.css';
 
 interface GroupedLinksListProps {
@@ -41,14 +41,14 @@ export function GroupedLinksList({
 
   return (
     <div className={styles.list}>
-      <div className={styles.listTop}>
-        <Button variant="primary" size="sm" onClick={onStartSave} block disabled={!canSave}>
+      <div className={styles.saveCurrent}>
+        <Button variant="primary" onClick={onStartSave} block disabled={!canSave}>
           Save current URL
         </Button>
       </div>
 
       {totalCount === 0 ? (
-        <p className={styles.empty}>No saved URLs yet. Save the current URL to get started.</p>
+        <p className={styles.empty}>No saved URLs yet</p>
       ) : (
         groups.map((g) => {
           const groupLinks = linksByGroup.get(g.id) ?? [];
@@ -73,39 +73,47 @@ export function GroupedLinksList({
                   className={`${styles.chevron} ${isExpanded ? '' : styles.chevronCollapsed}`}
                   aria-hidden="true"
                 >
-                  <IconChevronLeft />
+                  <IconChevronDown />
                 </span>
               </button>
+
               {isExpanded && (
                 <ul className={styles.linkList}>
-                  {groupLinks.map((link) => (
-                    <li key={link.id} className={styles.linkRow}>
-                      <button
-                        type="button"
-                        className={styles.linkButton}
-                        onClick={() => onLoadLink(link.url)}
-                        title={link.url}
-                      >
-                        <span className={styles.linkLabel}>{link.label || link.url}</span>
-                        {link.label && <span className={styles.linkUrl}>{link.url}</span>}
-                      </button>
-                      <div className={styles.linkActions}>
-                        <IconButton
-                          aria-label={`Edit ${link.label || link.url}`}
-                          icon={<IconEdit />}
-                          size="sm"
-                          onClick={() => onStartEdit(link)}
-                        />
-                        <IconButton
-                          aria-label={`Delete ${link.label || link.url}`}
-                          icon={<IconClose />}
-                          size="sm"
-                          tone="danger"
-                          onClick={() => onDeleteLink(link.id)}
-                        />
-                      </div>
-                    </li>
-                  ))}
+                  {groupLinks.map((link) => {
+                    const name = link.label || link.url;
+                    return (
+                      <li key={link.id} className={styles.linkRow}>
+                        <span className={styles.linkText}>
+                          <span className={styles.linkLabel}>{name}</span>
+                          {link.label && <span className={styles.linkUrl}>{link.url}</span>}
+                        </span>
+                        <span className={styles.linkActions}>
+                          <IconButton
+                            aria-label={`Load ${name}`}
+                            title="Load into editor"
+                            icon={<IconLoad />}
+                            size="md"
+                            onClick={() => onLoadLink(link.url)}
+                          />
+                          <IconButton
+                            aria-label={`Edit ${name}`}
+                            title="Edit"
+                            icon={<IconEdit />}
+                            size="md"
+                            onClick={() => onStartEdit(link)}
+                          />
+                          <IconButton
+                            aria-label={`Delete ${name}`}
+                            title="Delete"
+                            icon={<IconClose />}
+                            size="md"
+                            tone="danger"
+                            onClick={() => onDeleteLink(link.id)}
+                          />
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>

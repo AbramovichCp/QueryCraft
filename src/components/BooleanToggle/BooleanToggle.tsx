@@ -9,8 +9,10 @@ interface BooleanToggleProps {
 
 /**
  * Boolean toggle rendered as a button with role="switch".
+ *
  * Space and Enter both activate it (native button semantics). We prevent
- * default on Space to stop the popup from scrolling.
+ * default on Space to stop the popup from scrolling. The literal value text
+ * sits next to it in ParamRow, so the state is never carried by color alone.
  */
 export function BooleanToggle({
   id,
@@ -26,22 +28,17 @@ export function BooleanToggle({
   }
 
   return (
-    <div className={styles.row}>
-      <button
-        id={id}
-        type="button"
-        role="switch"
-        aria-checked={value}
-        aria-label={ariaLabel}
-        className={[styles.track, value ? styles.on : ''].join(' ')}
-        onClick={() => onChange(!value)}
-        onKeyDown={onKeyDown}
-      >
-        <span className={styles.thumb} aria-hidden="true" />
-      </button>
-      <span className={styles.label} aria-hidden="true">
-        {value ? 'true' : 'false'}
-      </span>
-    </div>
+    <button
+      id={id}
+      type="button"
+      role="switch"
+      aria-checked={value}
+      aria-label={ariaLabel}
+      className={[styles.track, value ? styles.on : ''].filter(Boolean).join(' ')}
+      onClick={() => onChange(!value)}
+      onKeyDown={onKeyDown}
+    >
+      <span className={styles.thumb} aria-hidden="true" />
+    </button>
   );
 }

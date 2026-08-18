@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { isContainer, shortPreview } from '@/lib/structuredParam';
-import { IconChevronRightSmall } from '../icons';
+import { IconChevronRight } from '../icons';
 import { JsonLeafInput } from './JsonLeafInput';
 import styles from './JsonTree.module.css';
 
@@ -120,7 +120,7 @@ export function JsonTree({ value, onPush, onLeafChange, onKeyChange }: JsonTreeP
               <>
                 <span className={styles.preview}>{shortPreview(v)}</span>
                 <span className={styles.chevron}>
-                  <IconChevronRightSmall />
+                  <IconChevronRight />
                 </span>
               </>
             ) : (

@@ -32,17 +32,25 @@ export function Button({
       type={type}
       className={[
         styles.root,
-        styles[`variant-${variant}`],
-        styles[`size-${size}`],
+        styles[variant],
+        styles[size],
         block ? styles.block : '',
         className ?? '',
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      {leadingIcon && <span className={styles.icon} aria-hidden="true">{leadingIcon}</span>}
-      <span className={styles.label}>{children}</span>
-      {trailingIcon && <span className={styles.icon} aria-hidden="true">{trailingIcon}</span>}
+      {leadingIcon && (
+        <span className={styles.icon} aria-hidden="true">
+          {leadingIcon}
+        </span>
+      )}
+      <span>{children}</span>
+      {trailingIcon && (
+        <span className={styles.icon} aria-hidden="true">
+          {trailingIcon}
+        </span>
+      )}
     </button>
   );
 }

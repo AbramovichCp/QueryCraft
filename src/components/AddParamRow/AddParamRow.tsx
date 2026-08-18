@@ -9,17 +9,17 @@ interface AddParamRowProps {
 }
 
 /**
- * The "add new parameter" row at the bottom of the list.
+ * The "add new parameter" card at the bottom of the list.
  *
  * Behavior:
  * - `+` button is disabled while key is empty (aria-disabled too, so SR announces)
  * - Enter in either field commits, clears both, and returns focus to the key field
- * - Matches the visual rhythm of ParamRow via identical grid columns
+ * - Key/value columns match ParamRow's 32% split so the cards read as one rhythm
  */
 export function AddParamRow({ onAdd }: AddParamRowProps) {
   const [key, setKey] = useState('');
   const [value, setValue] = useState('');
-  const keyInputRef = useRef<HTMLDivElement>(null);
+  const keyCellRef = useRef<HTMLDivElement>(null);
   const keyId = useId();
   const valueId = useId();
 
@@ -32,53 +32,58 @@ export function AddParamRow({ onAdd }: AddParamRowProps) {
     setKey('');
     setValue('');
     // Return focus to key field for fast repeated additions.
-    const input = keyInputRef.current?.querySelector<HTMLInputElement>('input');
-    input?.focus();
+    keyCellRef.current?.querySelector('input')?.focus();
   }
 
   return (
-    <div className={styles.row} role="group" aria-label="Add a new parameter">
-      <div className={styles.keyCell} ref={keyInputRef}>
-        <label htmlFor={keyId} className="visually-hidden">
-          New parameter key
-        </label>
-        <ParamTextInput
-          id={keyId}
-          variant="key"
-          value={key}
-          placeholder="Key"
-          aria-label="New parameter key"
-          onChange={setKey}
-          onEnter={commit}
-        />
+    <section className={styles.card} aria-labelledby={`${keyId}-title`}>
+      <div className={styles.cardHeader}>
+        <h3 id={`${keyId}-title`} className={styles.cardTitle}>
+          Add parameter
+        </h3>
       </div>
 
-      <div className={styles.valueCell}>
-        <label htmlFor={valueId} className="visually-hidden">
-          New parameter value
-        </label>
-        <ParamTextInput
-          id={valueId}
-          variant="value"
-          value={value}
-          placeholder="Value"
-          aria-label="New parameter value"
-          onChange={setValue}
-          onEnter={commit}
-        />
-      </div>
+      <div className={styles.row}>
+        <div className={styles.keyCell} ref={keyCellRef}>
+          <label htmlFor={keyId} className="visually-hidden">
+            New parameter key
+          </label>
+          <ParamTextInput
+            id={keyId}
+            variant="add"
+            value={key}
+            placeholder="Key"
+            aria-label="New parameter key"
+            onChange={setKey}
+            onEnter={commit}
+          />
+        </div>
 
-      <div className={styles.actionCell}>
+        <div className={styles.valueCell}>
+          <label htmlFor={valueId} className="visually-hidden">
+            New parameter value
+          </label>
+          <ParamTextInput
+            id={valueId}
+            variant="add"
+            value={value}
+            placeholder="Value"
+            aria-label="New parameter value"
+            onChange={setValue}
+            onEnter={commit}
+          />
+        </div>
+
         <IconButton
           aria-label="Add parameter"
           aria-disabled={!canAdd}
           disabled={!canAdd}
-          tone="accent"
-          size="sm"
+          variant="filled"
+          size="xl"
           icon={<IconPlus />}
           onClick={commit}
         />
       </div>
-    </div>
+    </section>
   );
 }

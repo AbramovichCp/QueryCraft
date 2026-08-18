@@ -3,8 +3,8 @@ import type { QueryParam } from '@/types';
 import { tryParseStructured, shortPreview } from '@/lib/structuredParam';
 import { ParamTextInput } from '../ParamTextInput';
 import { BooleanToggle } from '../BooleanToggle';
-import { RemoveParamButton } from '../RemoveParamButton';
-import { IconChevronRightSmall } from '../icons';
+import { IconButton } from '../IconButton';
+import { IconChevronRight, IconClose } from '../icons';
 import { CopyButton } from './CopyButton';
 import styles from './ParamRow.module.css';
 
@@ -33,18 +33,16 @@ export function ParamRow({
     <li className={styles.row}>
       <div className={styles.keyCell}>
         <label htmlFor={keyId} className="visually-hidden">
-          Parameter key
+          {`Key for parameter ${keyName}`}
         </label>
-        <div className={styles.fieldWrap}>
-          <ParamTextInput
-            id={keyId}
-            variant="key"
-            value={param.key}
-            aria-label={`Key for parameter ${param.key || '(empty)'}`}
-            onChange={(next) => onKeyChange(param.id, next)}
-          />
-          <CopyButton text={param.key} aria-label={`Copy key "${param.key}"`} />
-        </div>
+        <ParamTextInput
+          id={keyId}
+          variant="key"
+          value={param.key}
+          aria-label={`Key for parameter ${keyName}`}
+          onChange={(next) => onKeyChange(param.id, next)}
+        />
+        <CopyButton text={param.key} aria-label={`Copy key "${param.key}"`} />
       </div>
 
       <div className={styles.valueCell}>
@@ -58,9 +56,13 @@ export function ParamRow({
         />
       </div>
 
-      <div className={styles.removeCell}>
-        <RemoveParamButton paramKey={param.key} onRemove={() => onRemove(param.id)} />
-      </div>
+      <IconButton
+        aria-label={param.key ? `Remove parameter ${param.key}` : 'Remove empty parameter'}
+        icon={<IconClose />}
+        size="sm"
+        tone="danger"
+        onClick={() => onRemove(param.id)}
+      />
     </li>
   );
 }
@@ -85,20 +87,16 @@ function ValueCell({
 }: ValueCellProps) {
   if (param.type === 'boolean') {
     return (
-      <>
-        <label htmlFor={valueId} className="visually-hidden">
-          {`Boolean value for ${param.key}`}
-        </label>
-        <div className={styles.fieldWrap}>
-          <BooleanToggle
-            id={valueId}
-            value={param.value.toLowerCase() === 'true'}
-            aria-label={`Toggle boolean value for ${param.key}`}
-            onChange={() => onToggleBoolean(param.id)}
-          />
-          <CopyButton text={param.value} aria-label={`Copy value "${param.value}"`} />
-        </div>
-      </>
+      <div className={styles.boolValue}>
+        <BooleanToggle
+          id={valueId}
+          value={param.value.toLowerCase() === 'true'}
+          aria-label={`Toggle value for ${keyName}`}
+          onChange={() => onToggleBoolean(param.id)}
+        />
+        {/* Literal value, casing preserved — never color alone. */}
+        <span className={styles.boolLabel}>{param.value}</span>
+      </div>
     );
   }
 
@@ -108,19 +106,17 @@ function ValueCell({
     return (
       <div className={styles.structuredValue}>
         <span className={styles.structuredPreview}>{preview}</span>
-        <button
-          type="button"
-          className={styles.expandBtn}
-          onClick={onExpand}
-          aria-label={`Expand structured value for ${param.key}`}
-          title="Expand structured value"
-        >
-          <IconChevronRightSmall />
-        </button>
         <CopyButton
           text={param.value}
-          aria-label={`Copy structured value for ${param.key}`}
+          aria-label={`Copy structured value for ${keyName}`}
           variant="inline"
+        />
+        <IconButton
+          aria-label={`Expand structured value for ${keyName}`}
+          title="Expand structured value"
+          icon={<IconChevronRight />}
+          size="sm"
+          onClick={onExpand}
         />
       </div>
     );
@@ -129,18 +125,17 @@ function ValueCell({
   return (
     <>
       <label htmlFor={valueId} className="visually-hidden">
-        {`Value for parameter ${param.key}`}
+        {`Value for parameter ${keyName}`}
       </label>
-      <div className={styles.fieldWrap}>
-        <ParamTextInput
-          id={valueId}
-          variant="value"
-          value={param.value}
-          aria-label={`Value for parameter ${keyName}`}
-          onChange={(next) => onValueChange(param.id, next)}
-        />
-        <CopyButton text={param.value} aria-label={`Copy value for parameter ${keyName}`} />
-      </div>
+      <ParamTextInput
+        id={valueId}
+        variant="value"
+        value={param.value}
+        placeholder="(empty)"
+        aria-label={`Value for parameter ${keyName}`}
+        onChange={(next) => onValueChange(param.id, next)}
+      />
+      <CopyButton text={param.value} aria-label={`Copy value for parameter ${keyName}`} />
     </>
   );
 }

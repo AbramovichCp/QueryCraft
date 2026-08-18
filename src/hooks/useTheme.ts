@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
-import { storage } from '@/lib/storage';
-import type { ThemePreference } from '@/types';
+import { useEffect, useRef, useState } from 'react';
 
-type ResolvedTheme = 'light' | 'dark';
+export type ResolvedTheme = 'light' | 'dark';
 
 function resolveSystemTheme(): ResolvedTheme {
   if (typeof window === 'undefined' || !window.matchMedia) return 'light';
@@ -10,55 +8,41 @@ function resolveSystemTheme(): ResolvedTheme {
 }
 
 /**
- * Manages theme preference (light | dark | system) with chrome.storage persistence.
- * Applies `data-theme` to <html>. Listens to system changes when pref is "system".
+ * Mirrors the OS color scheme onto `data-theme` on <html>.
+ *
+ * There is deliberately no user-facing theme setting: the popup is a companion
+ * to whatever the browser is already doing, so it follows the system and
+ * updates live when that changes.
  */
-export function useTheme(): {
-  preference: ThemePreference;
-  resolved: ResolvedTheme;
-  setPreference: (pref: ThemePreference) => void;
-} {
-  const [preference, setPreferenceState] = useState<ThemePreference>('system');
-  const [resolved, setResolved] = useState<ResolvedTheme>(resolveSystemTheme());
+export function useTheme(): ResolvedTheme {
+  const [resolved, setResolved] = useState<ResolvedTheme>(resolveSystemTheme);
 
-  // Load persisted preference once. On storage failure keep the "system"
-  // default rather than surfacing an unhandled rejection.
   useEffect(() => {
-    let cancelled = false;
-    storage.getTheme().then(
-      (pref) => {
-        if (!cancelled) setPreferenceState(pref);
-      },
-      () => undefined,
-    );
-    return () => {
-      cancelled = true;
-    };
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => setResolved(e.matches ? 'dark' : 'light');
+    setResolved(mql.matches ? 'dark' : 'light');
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
   }, []);
 
-  // Keep resolved theme in sync with preference + system changes.
+  // Apply to document root, suppressing transitions across the swap so the
+  // two palettes don't cross-fade into muddy intermediate colors.
+  const isFirstApply = useRef(true);
   useEffect(() => {
-    if (preference === 'system') {
-      const mql = window.matchMedia('(prefers-color-scheme: dark)');
-      const handler = (e: MediaQueryListEvent) => setResolved(e.matches ? 'dark' : 'light');
-      setResolved(mql.matches ? 'dark' : 'light');
-      // Chrome supports addEventListener on MediaQueryList in MV3 runtimes.
-      mql.addEventListener('change', handler);
-      return () => mql.removeEventListener('change', handler);
+    const root = document.documentElement;
+    if (isFirstApply.current) {
+      isFirstApply.current = false;
+      root.setAttribute('data-theme', resolved);
+      return;
     }
-    setResolved(preference);
-    return undefined;
-  }, [preference]);
-
-  // Apply to document root.
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', resolved);
+    root.setAttribute('data-theme-switching', '');
+    root.setAttribute('data-theme', resolved);
+    // Two frames: one for the attribute to take effect, one for the repaint.
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => root.removeAttribute('data-theme-switching'));
+    });
+    return () => cancelAnimationFrame(raf);
   }, [resolved]);
 
-  const setPreference = useCallback((pref: ThemePreference) => {
-    setPreferenceState(pref);
-    void storage.setTheme(pref);
-  }, []);
-
-  return { preference, resolved, setPreference };
+  return resolved;
 }

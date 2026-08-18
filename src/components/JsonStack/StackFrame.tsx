@@ -6,6 +6,8 @@ import {
   setAtPath,
   renameKeyAtPath,
 } from '@/lib/structuredParam';
+import { Button } from '../Button';
+import { IconChevronLeft } from '../icons';
 import { JsonTree } from './JsonTree';
 import { RawJsonEditor } from './RawJsonEditor';
 import styles from './StackFrame.module.css';
@@ -52,14 +54,9 @@ export function StackFrame({
           <p className={styles.missing}>This value is no longer available.</p>
         </div>
         <div className={styles.footer}>
-          <button
-            type="button"
-            className={styles.backBtn}
-            onClick={onPopAll}
-            aria-label="Back to parameters"
-          >
-            ← Back
-          </button>
+          <Button variant="ghost" onClick={onPopAll} leadingIcon={<IconChevronLeft />}>
+            Back to parameters
+          </Button>
         </div>
       </div>
     );
@@ -96,7 +93,7 @@ export function StackFrame({
       {/* Breadcrumb + Structured/Raw toggle */}
       <div className={styles.topBar}>
         <nav className={styles.breadcrumb} aria-label="JSON path">
-          <button type="button" className={styles.crumbRoot} onClick={onPopAll}>
+          <button type="button" className={styles.crumb} onClick={onPopAll}>
             params
           </button>
           {frames.map((f, i) => {
@@ -107,7 +104,7 @@ export function StackFrame({
                 {isCurrent ? (
                   <span className={styles.crumbCurrent}>{f.name}</span>
                 ) : (
-                  <button type="button" className={styles.crumbAncestor} onClick={() => onPopTo(i)}>
+                  <button type="button" className={styles.crumb} onClick={() => onPopTo(i)}>
                     {f.name}
                   </button>
                 )}
@@ -157,9 +154,14 @@ export function StackFrame({
 
       {/* Back button */}
       <div className={styles.footer}>
-        <button type="button" className={styles.backBtn} onClick={onPop} aria-label="Go back one level">
-          ← Back
-        </button>
+        <Button
+          variant="ghost"
+          onClick={onPop}
+          leadingIcon={<IconChevronLeft />}
+          aria-label="Go back one level"
+        >
+          Back
+        </Button>
       </div>
     </div>
   );

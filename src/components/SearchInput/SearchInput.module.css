@@ -1,0 +1,39 @@
+.wrapper {
+  position: relative;
+  display: block;
+}
+
+.icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  color: var(--color-text-faint);
+}
+
+.input {
+  width: 100%;
+  background: var(--color-surface-inset);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 8px 12px 8px 32px;
+  font-size: var(--font-size-mono);
+  color: var(--color-text-body);
+  transition: border-color var(--transition-fast);
+}
+
+.input:hover {
+  border-color: var(--color-border-strong);
+}
+
+.input:focus {
+  border-color: var(--color-border-focus);
+}
+
+/* Native clear affordance would break the monochrome treatment. */
+.input::-webkit-search-cancel-button {
+  display: none;
+}

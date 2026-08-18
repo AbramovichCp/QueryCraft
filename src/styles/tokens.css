@@ -1,179 +1,214 @@
 /*
- * QueryCraft design tokens.
+ * QueryCraft design tokens — monochrome, Linear-inspired.
  *
- * Every text color is verified against its background for WCAG 2.2 AA:
- *   - Normal text:  >= 4.5:1
- *   - Large text:   >= 3:1
- *   - UI components / focus: >= 3:1
+ * Palette is intentionally hue-free (oklch chroma 0): hierarchy comes from
+ * lightness, border alpha, and weight rather than color. Dark is the primary
+ * theme; light mirrors it with the same structure and inverted lightness.
  *
- * Colors are defined as hex so any designer can paste them straight into a checker.
+ * Because nothing is color-coded, status is always carried by an icon or a
+ * label as well — see the accessibility notes in the README.
  */
 
+/* ── Dark (default) ───────────────────────────────────────────────── */
+
 :root,
-[data-theme='light'] {
+[data-theme='dark'] {
+  /*
+   * Declaring color-scheme is not cosmetic: without it Chrome treats the page
+   * as unaware of theming and applies its own auto-dark-mode, repainting
+   * inputs and switches with inverted colors while leaving computed styles
+   * untouched. It also themes native scrollbars and select popups.
+   */
+  color-scheme: dark;
+
   /* Surfaces */
-  --color-bg: #ffffff;
-  --color-surface: #f4f5f8;
-  --color-surface-raised: #ffffff;
-  --color-surface-sunken: #eceef3;
+  --color-bg: oklch(0.15 0 0); /* popup panel */
+  --color-bg-outer: oklch(0.1 0 0); /* page behind the panel */
+  --color-surface-inset: oklch(0.19 0 0); /* inputs, url box, saved items */
+  --color-surface-header: oklch(0.18 0 0); /* card header strips */
 
-  /* Text (on --color-bg) */
-  --color-text-primary: #0f1115; /* 19.2:1 */
-  --color-text-secondary: #3a4150; /* 10.3:1 */
-  --color-text-muted: #5a6370; /* 6.0:1 — comfortably above AA, readable for placeholders */
+  /* Text — descending emphasis */
+  --color-text-primary: oklch(0.95 0 0);
+  --color-text-strong: oklch(0.9 0 0); /* param keys, active values */
+  --color-text-body: oklch(0.94 0 0); /* editable input text */
+  --color-text-secondary: oklch(0.75 0 0); /* outlined button labels */
+  --color-text-muted: oklch(0.55 0 0); /* section labels, meta */
+  --color-text-faint: oklch(0.45 0 0); /* placeholders, idle icons */
 
-  /* Accent — deep violet; mapped so text on accent and accent on surface both pass */
-  --color-accent: #5b3df5; /* 5.8:1 against --color-bg */
-  --color-accent-hover: #4a2fde;
-  --color-accent-pressed: #3a23b8;
-  --color-on-accent: #ffffff; /* 6.9:1 on --color-accent */
+  /* Borders — white at low alpha */
+  --color-border-subtle: oklch(1 0 0 / 0.06);
+  --color-border: oklch(1 0 0 / 0.08);
+  --color-border-card: oklch(1 0 0 / 0.09);
+  --color-border-strong: oklch(1 0 0 / 0.12);
+  --color-border-focus: oklch(1 0 0 / 0.3);
 
-  /* Borders / dividers (non-text, so 3:1 target) */
-  --color-border: #c9cfda;
-  --color-border-strong: #9aa3b2;
+  /* Fills for hover / inset controls */
+  --color-fill-subtle: oklch(1 0 0 / 0.06);
+  --color-fill: oklch(1 0 0 / 0.08);
+  --color-fill-strong: oklch(1 0 0 / 0.1);
 
-  /* Focus ring */
-  --color-focus: #0a66ff; /* 4.7:1 — visible on both light surface and accent */
+  /*
+   * Primary action — inverted block by default. When an accent color is
+   * chosen in Settings these five are overridden at runtime (see useAccent);
+   * every accent-aware component reads them, so nothing branches on "is an
+   * accent set?" in component code.
+   */
+  --color-accent: oklch(0.95 0 0);
+  --color-accent-hover: oklch(1 0 0);
+  --color-on-accent: oklch(0.12 0 0);
+  /* Accent used as *text* on a panel (logo, badge, URL keys). */
+  --color-accent-text: oklch(0.95 0 0);
+  /* Accent used as a tinted fill behind accent text. */
+  --color-accent-soft: oklch(1 0 0 / 0.1);
 
-  /* Feedback */
-  --color-danger: #b02a3a;
-  --color-warning: #8a5300;
-  --color-success: #0a7d52;
+  /* Toast */
+  --color-toast-bg: oklch(0.28 0 0);
+  --color-toast-text: oklch(0.95 0 0);
+  --color-toast-border: oklch(1 0 0 / 0.14);
 
-  /* Input-specific surfaces */
-  --color-input-bg: #ffffff;
-  --color-input-bg-alt: #f0f2f6; /* key field — slightly darker to differentiate */
-  --color-input-border: #c9cfda;
+  /* Focus ring — must read against every surface above */
+  --color-focus: oklch(0.85 0 0);
+
+  /* Feedback. Hue-free by default so the monochrome language holds; danger
+     gets a faint warm lift so destructive controls are not purely iconographic. */
+  --color-danger: oklch(0.72 0.13 25);
+  --color-success: oklch(0.9 0 0);
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(15, 17, 21, 0.06);
-  --shadow-md: 0 4px 12px rgba(15, 17, 21, 0.08);
-  --shadow-lg: 0 12px 32px rgba(15, 17, 21, 0.12);
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.35);
+  --shadow-md: 0 8px 24px oklch(0 0 0 / 0.4);
+  --shadow-lg: 0 20px 60px oklch(0 0 0 / 0.5);
 
-  /*
-   * JSON syntax highlight colors — WCAG 2.2 AA verified against --color-bg #ffffff:
-   *   --json-key     #0369A1  5.7:1  ✓
-   *   --json-index   #374151  10.0:1 ✓
-   *   --json-string  #92400E  6.9:1  ✓
-   *   --json-number  #5B21B6  8.9:1  ✓
-   *   --json-boolean #166534  6.7:1  ✓
-   *   --json-null    #6B7280  4.9:1  ✓
-   *   --json-punct   #6B7280  4.9:1  ✓
-   */
-  --json-key:     #0369A1;
-  --json-index:   #374151;
-  --json-string:  #92400E;
-  --json-number:  #5B21B6;
-  --json-boolean: #166534;
-  --json-null:    #6B7280;
-  --json-punct:   #6B7280;
+  /* JSON syntax — monochrome, separated by lightness + weight */
+  --json-key: oklch(0.95 0 0);
+  --json-index: oklch(0.6 0 0);
+  --json-string: oklch(0.8 0 0);
+  --json-number: oklch(0.9 0 0);
+  --json-boolean: oklch(0.85 0 0);
+  --json-null: oklch(0.55 0 0);
+  --json-punct: oklch(0.5 0 0);
 }
 
-[data-theme='dark'] {
-  /* Surfaces */
-  --color-bg: #0c0e13;
-  --color-surface: #15181f;
-  --color-surface-raised: #1b1f28;
-  --color-surface-sunken: #0a0c10;
+/* ── Light ────────────────────────────────────────────────────────── */
 
-  /* Text (on --color-bg) */
-  --color-text-primary: #f1f3f7; /* 16.8:1 */
-  --color-text-secondary: #c3c9d4; /* 11.1:1 */
-  --color-text-muted: #a3acba; /* 7.4:1 — still passes AA, distinct from primary without being unreadable */
+[data-theme='light'] {
+  color-scheme: light;
 
-  /* Accent — lifted for dark contrast */
-  --color-accent: #a996ff; /* 7.9:1 against --color-bg */
-  --color-accent-hover: #bbacff;
-  --color-accent-pressed: #8973ff;
-  --color-on-accent: #0c0e13; /* 7.9:1 on --color-accent */
+  --color-bg: oklch(1 0 0);
+  --color-bg-outer: oklch(0.94 0 0);
+  --color-surface-inset: oklch(0.95 0 0);
+  --color-surface-header: oklch(0.93 0 0);
 
-  /* Borders */
-  --color-border: #2c313c;
-  --color-border-strong: #474e5e;
+  --color-text-primary: oklch(0.15 0 0);
+  --color-text-strong: oklch(0.2 0 0);
+  --color-text-body: oklch(0.2 0 0);
+  --color-text-secondary: oklch(0.3 0 0);
+  --color-text-muted: oklch(0.45 0 0);
+  --color-text-faint: oklch(0.5 0 0);
 
-  /* Focus */
-  --color-focus: #7aa8ff; /* 7.6:1 */
+  --color-border-subtle: oklch(0 0 0 / 0.05);
+  --color-border: oklch(0 0 0 / 0.08);
+  --color-border-card: oklch(0 0 0 / 0.09);
+  --color-border-strong: oklch(0 0 0 / 0.12);
+  --color-border-focus: oklch(0 0 0 / 0.35);
 
-  /* Feedback */
-  --color-danger: #ff7a8c;
-  --color-warning: #ffc66e;
-  --color-success: #6ce3a9;
+  --color-fill-subtle: oklch(0 0 0 / 0.05);
+  --color-fill: oklch(0 0 0 / 0.08);
+  --color-fill-strong: oklch(0 0 0 / 0.1);
 
-  /* Input surfaces */
-  --color-input-bg: #1b1f28;
-  --color-input-bg-alt: #22262f;
-  --color-input-border: #2c313c;
+  --color-accent: oklch(0.15 0 0);
+  --color-accent-hover: oklch(0.28 0 0);
+  --color-on-accent: oklch(0.98 0 0);
+  --color-accent-text: oklch(0.15 0 0);
+  --color-accent-soft: oklch(0 0 0 / 0.08);
 
-  /* Shadows (a bit stronger on dark) */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --color-toast-bg: oklch(0.15 0 0);
+  --color-toast-text: oklch(0.98 0 0);
+  --color-toast-border: oklch(0 0 0 / 0.12);
 
-  /*
-   * JSON syntax highlight colors — WCAG 2.2 AA verified against --color-bg #0c0e13:
-   *   --json-key     #7DD3FC  12.1:1 ✓
-   *   --json-index   #9CA3AF  8.4:1  ✓
-   *   --json-string  #F5D494  14.1:1 ✓
-   *   --json-number  #C4B5FD  11.1:1 ✓
-   *   --json-boolean #86EFAC  14.5:1 ✓
-   *   --json-null    #9CA3AF  8.4:1  ✓
-   *   --json-punct   #9CA3AF  8.4:1  ✓
-   */
-  --json-key:     #7DD3FC;
-  --json-index:   #9CA3AF;
-  --json-string:  #F5D494;
-  --json-number:  #C4B5FD;
-  --json-boolean: #86EFAC;
-  --json-null:    #9CA3AF;
-  --json-punct:   #9CA3AF;
+  --color-focus: oklch(0.3 0 0);
+
+  --color-danger: oklch(0.5 0.16 25);
+  --color-success: oklch(0.3 0 0);
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.06);
+  --shadow-md: 0 8px 24px oklch(0 0 0 / 0.18);
+  --shadow-lg: 0 20px 60px oklch(0 0 0 / 0.16);
+
+  --json-key: oklch(0.15 0 0);
+  --json-index: oklch(0.5 0 0);
+  --json-string: oklch(0.35 0 0);
+  --json-number: oklch(0.2 0 0);
+  --json-boolean: oklch(0.28 0 0);
+  --json-null: oklch(0.5 0 0);
+  --json-punct: oklch(0.55 0 0);
 }
 
-/* Shared sizing/typography tokens — theme-agnostic */
+/* ── Theme-agnostic scales ────────────────────────────────────────── */
+
 :root {
-  /* Typography */
+  /* Typography. Inter / JetBrains Mono are used when present on the system;
+     the extension ships no webfonts (remote font CDNs are blocked by the
+     MV3 content security policy), so the fallbacks matter. */
   --font-sans:
     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   --font-mono:
-    'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
+  --font-size-2xs: 10.5px;
   --font-size-xs: 11px;
-  --font-size-sm: 12px;
-  --font-size-base: 13px;
-  --font-size-md: 14px;
-  --font-size-lg: 16px;
-  --font-size-xl: 18px;
+  --font-size-sm: 11.5px;
+  --font-size-base: 12px;
+  --font-size-mono: 12.5px;
+  --font-size-md: 13px;
+  --font-size-lg: 14px;
+  --font-size-xl: 15px;
 
   --line-height-tight: 1.25;
   --line-height-base: 1.5;
-  --line-height-relaxed: 1.65;
+  --line-height-mono: 1.6;
 
   /* Spacing */
-  --space-1: 4px;
-  --space-2: 6px;
-  --space-3: 8px;
-  --space-4: 12px;
-  --space-5: 16px;
-  --space-6: 20px;
-  --space-7: 24px;
-  --space-8: 32px;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 14px;
+  --space-8: 16px;
+  --space-9: 18px;
+  --space-10: 20px;
+  --space-11: 24px;
+
+  /* Panel padding rhythm from the handoff */
+  --pad-block: 16px;
+  --pad-inline: 18px;
 
   /* Radii */
-  --radius-sm: 4px;
-  --radius-md: 6px;
+  --radius-sm: 6px;
+  --radius-md: 7px;
   --radius-lg: 8px;
-  --radius-xl: 12px;
-  --radius-full: 9999px;
+  --radius-card: 10px;
+  --radius-panel: 16px;
+  --radius-full: 20px;
 
   /* Interaction */
   --focus-ring-width: 2px;
-  --focus-ring-offset: 2px;
+  --focus-ring-offset: 1px;
   --transition-fast: 120ms ease;
   --transition-base: 180ms ease;
+  --transition-panel: 220ms ease;
 
-  /* Minimum hit target per WCAG 2.2 SC 2.5.8 */
-  --min-target: 28px;
+  /* Minimum hit target (WCAG 2.2 SC 2.5.8) */
+  --min-target: 24px;
 
-  /* Popup dimensions */
-  --popup-width: 440px;
-  --popup-max-height: 600px;
+  /*
+   * Popup dimensions. The handoff specifies 380x640, but Chrome hard-caps
+   * extension popups at 800x600 — a 640px panel would simply be clipped.
+   * The layout is a flex column with a scrolling middle, so 600 is the
+   * faithful rendering of the design within the platform limit.
+   */
+  --popup-width: 380px;
+  --popup-height: 600px;
 }

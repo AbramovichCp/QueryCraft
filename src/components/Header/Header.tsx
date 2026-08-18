@@ -3,7 +3,7 @@ import { IconSearch } from '../icons';
 import styles from './Header.module.css';
 
 interface HeaderProps {
-  /** Right-side slot for action buttons (theme toggle, saved links trigger). */
+  /** Right-side slot for action buttons (theme toggle, expand, saved links). */
   actions?: ReactNode;
 }
 

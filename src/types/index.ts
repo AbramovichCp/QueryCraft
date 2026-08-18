@@ -47,7 +47,11 @@ export interface Group {
   createdAt: number;
 }
 
-export type ThemePreference = 'light' | 'dark' | 'system';
+/**
+ * Chosen accent color as a hex string, or `null` for the monochrome default.
+ * The theme itself is not a preference — it always follows the OS.
+ */
+export type AccentColor = string | null;
 
 /** Special state when the active tab's URL is a browser-internal page we can't edit. */
 export type TabLoadState =

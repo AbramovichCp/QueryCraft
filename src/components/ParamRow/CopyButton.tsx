@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { IconCheck, IconCopy } from '../icons';
 import styles from './ParamRow.module.css';
 
+export type CopyButtonVariant = 'overlay' | 'inline';
+
 interface CopyButtonProps {
   /** Text to copy; the button is a no-op when empty. */
   text: string;
   'aria-label': string;
   /** "overlay" floats over an input on hover; "inline" sits in a flex row. */
-  variant?: 'overlay' | 'inline';
+  variant?: CopyButtonVariant;
 }
 
 const RESET_AFTER_MS = 1500;

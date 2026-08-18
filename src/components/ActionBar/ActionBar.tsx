@@ -1,5 +1,5 @@
 import { Button } from '../Button';
-import { IconCheck, IconCopy, IconReset, IconSave } from '../icons';
+import { IconBookmark, IconCheck, IconCopy, IconReset } from '../icons';
 import styles from './ActionBar.module.css';
 
 interface ActionBarProps {
@@ -12,11 +12,10 @@ interface ActionBarProps {
 }
 
 /**
- * Bottom action bar. Layout follows the reference screenshot:
+ * Bottom action bar:
  *   [Apply] [Reset] ...................................... [Copy] [Save]
  *
- * Apply is the primary action (accent). Others are ghost. All buttons reach
- * the WCAG 2.2 minimum target size via the Button component's --min-target.
+ * Apply is the primary (filled) action; the rest are outlined.
  */
 export function ActionBar({
   onApply,
@@ -28,27 +27,32 @@ export function ActionBar({
 }: ActionBarProps) {
   return (
     <div className={styles.root}>
-      <div className={styles.primary}>
-        <Button variant="primary" onClick={onApply} disabled={applyDisabled}>
-          Apply
-        </Button>
-        <Button variant="ghost" onClick={onReset} leadingIcon={<IconReset />}>
-          Reset
-        </Button>
-      </div>
-      <div className={styles.secondary}>
-        <Button
-          variant="ghost"
-          onClick={onCopy}
-          leadingIcon={copied ? <IconCheck /> : <IconCopy />}
-          aria-label={copied ? 'URL copied to clipboard' : 'Copy URL to clipboard'}
-        >
-          {copied ? 'Copied' : 'Copy'}
-        </Button>
-        <Button variant="ghost" onClick={onSave} leadingIcon={<IconSave />}>
-          Save
-        </Button>
-      </div>
+      <Button
+        variant="primary"
+        onClick={onApply}
+        disabled={applyDisabled}
+        leadingIcon={<IconCheck />}
+      >
+        Apply
+      </Button>
+      <Button variant="ghost" size="sm" onClick={onReset} leadingIcon={<IconReset />}>
+        Reset
+      </Button>
+
+      <div className={styles.spacer} />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onCopy}
+        leadingIcon={copied ? <IconCheck /> : <IconCopy />}
+        aria-label={copied ? 'URL copied to clipboard' : 'Copy URL to clipboard'}
+      >
+        {copied ? 'Copied' : 'Copy'}
+      </Button>
+      <Button variant="ghost" size="sm" onClick={onSave} leadingIcon={<IconBookmark />}>
+        Save
+      </Button>
     </div>
   );
 }

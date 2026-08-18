@@ -1,10 +1,15 @@
 import type { ChangeEvent } from 'react';
 import styles from './ParamTextInput.module.css';
 
+export type ParamInputVariant = 'key' | 'value' | 'add';
+
 interface ParamTextInputProps {
   id: string;
-  /** "key" renders in the accent color; "value" gets ellipsis + focus expand. */
-  variant: 'key' | 'value';
+  /**
+   * "key" is the borderless filled label field, "value" the bordered mono
+   * field, "add" the sans-serif field inside the add-parameter card.
+   */
+  variant: ParamInputVariant;
   value: string;
   placeholder?: string;
   'aria-label': string;
@@ -12,7 +17,7 @@ interface ParamTextInputProps {
   onEnter?: () => void;
 }
 
-/** Monospace text field for a parameter key or value cell. */
+/** Text field for a parameter key or value cell. */
 export function ParamTextInput({
   id,
   variant,

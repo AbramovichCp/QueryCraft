@@ -16,3 +16,17 @@ export function detectParamType(value: string): ParamType {
   if (tryParseStructured(value) !== undefined) return 'structured';
   return 'string';
 }
+
+/**
+ * Flip a boolean-ish value, preserving the casing style the URL already used
+ * so toggling `TRUE` yields `FALSE` and `False` yields `True` — round-tripping
+ * a param should never reformat the rest of the query string.
+ */
+export function flipBoolean(value: string): string {
+  const next = value.toLowerCase() === 'true' ? 'false' : 'true';
+  if (value === value.toUpperCase() && value !== value.toLowerCase()) return next.toUpperCase();
+  if (value[0] === value[0]?.toUpperCase() && value.slice(1) === value.slice(1).toLowerCase()) {
+    return next[0].toUpperCase() + next.slice(1);
+  }
+  return next;
+}

@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Group, SavedLink } from '@/types';
 import { DEFAULT_GROUP_ID } from '@/lib/storage';
-import { IconButton } from '../IconButton';
-import { IconChevronLeft, IconClose } from '../icons';
-import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { SlidePanel } from '../SlidePanel';
 import { SaveForm } from './SaveForm';
 import { GroupedLinksList } from './GroupedLinksList';
-import styles from './SavedLinksDrawer.module.css';
 
 type DrawerMode = 'list' | 'save' | 'edit';
 
@@ -32,7 +29,7 @@ const MODE_TITLES: Record<DrawerMode, string> = {
 };
 
 /**
- * Slide-in drawer from the right. Role dialog with a focus trap.
+ * Slide-in panel covering the editor. Role dialog with a focus trap.
  *
  * Three modes:
  *   - "list" (default): browse existing saved links, grouped.
@@ -56,8 +53,6 @@ export function SavedLinksDrawer({
   const [label, setLabel] = useState('');
   const [groupId, setGroupId] = useState(DEFAULT_GROUP_ID);
   const [editingLink, setEditingLink] = useState<SavedLink | null>(null);
-
-  const trapRef = useFocusTrap<HTMLDivElement>(open, onClose);
 
   // Apply initialMode only on the closed → open transition, so re-renders
   // (or pressing Cmd+S while already open) don't yank the user out of a form.
@@ -116,64 +111,41 @@ export function SavedLinksDrawer({
     backToList();
   }
 
-  if (!open) return null;
-
   const showingForm = mode === 'save' || (mode === 'edit' && editingLink !== null);
 
   return (
-    <>
-      <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
-      <div
-        ref={trapRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="saved-links-title"
-        className={styles.drawer}
-      >
-        <header className={styles.header}>
-          <div className={styles.headerLeft}>
-            {showingForm && (
-              <IconButton
-                aria-label="Back to saved list"
-                icon={<IconChevronLeft />}
-                onClick={backToList}
-                size="sm"
-              />
-            )}
-            <h2 id="saved-links-title" className={styles.title}>
-              {MODE_TITLES[mode]}
-            </h2>
-          </div>
-          <IconButton aria-label="Close saved URLs" icon={<IconClose />} onClick={onClose} />
-        </header>
-
-        <div className={styles.body}>
-          {showingForm ? (
-            <SaveForm
-              label={label}
-              onLabelChange={setLabel}
-              groupId={groupId}
-              onGroupChange={setGroupId}
-              groups={groups}
-              onCreateNewGroup={handleCreateNewGroup}
-              onSubmit={mode === 'edit' ? handleUpdate : handleSave}
-              onCancel={backToList}
-              previewUrl={mode === 'edit' && editingLink ? editingLink.url : currentUrl}
-              submitLabel={mode === 'edit' ? 'Update' : 'Save'}
-            />
-          ) : (
-            <GroupedLinksList
-              groups={groups}
-              linksByGroup={linksByGroup}
-              onLoadLink={onLoadLink}
-              onDeleteLink={onDeleteLink}
-              onStartEdit={handleStartEdit}
-              onStartSave={() => setMode('save')}
-              canSave={!!currentUrl}
-            />
-          )}
-        </div>
-      </div>
-    </>
+    <SlidePanel
+      open={open}
+      title={MODE_TITLES[mode]}
+      titleId="saved-links-title"
+      onClose={onClose}
+      onBack={showingForm ? backToList : undefined}
+      backLabel="Back to saved list"
+    >
+      {showingForm ? (
+        <SaveForm
+          label={label}
+          onLabelChange={setLabel}
+          groupId={groupId}
+          onGroupChange={setGroupId}
+          groups={groups}
+          onCreateNewGroup={handleCreateNewGroup}
+          onSubmit={mode === 'edit' ? handleUpdate : handleSave}
+          onCancel={backToList}
+          previewUrl={mode === 'edit' && editingLink ? editingLink.url : currentUrl}
+          submitLabel={mode === 'edit' ? 'Update' : 'Save'}
+        />
+      ) : (
+        <GroupedLinksList
+          groups={groups}
+          linksByGroup={linksByGroup}
+          onLoadLink={onLoadLink}
+          onDeleteLink={onDeleteLink}
+          onStartEdit={handleStartEdit}
+          onStartSave={() => setMode('save')}
+          canSave={!!currentUrl}
+        />
+      )}
+    </SlidePanel>
   );
 }

@@ -154,6 +154,16 @@ describe('toggleBooleanParam', () => {
   it('does nothing when currentParsed is null', () => {
     expect(() => useAppStore.getState().toggleBooleanParam('x')).not.toThrow();
   });
+
+  it('preserves the original casing when toggling', () => {
+    useAppStore.getState().loadUrl('https://example.com/?a=TRUE&b=False', 1);
+    const [a, b] = useAppStore.getState().currentParsed!.params;
+    useAppStore.getState().toggleBooleanParam(a.id);
+    useAppStore.getState().toggleBooleanParam(b.id);
+    const after = useAppStore.getState().currentParsed!.params;
+    expect(after[0].value).toBe('FALSE');
+    expect(after[1].value).toBe('True');
+  });
 });
 
 describe('removeParam', () => {

@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { Group } from '@/types';
 import { Button } from '../Button';
 import { GroupSelector } from '../GroupSelector';
@@ -29,7 +30,9 @@ export function SaveForm({
   previewUrl,
   submitLabel = 'Save',
 }: SaveFormProps) {
-  const labelId = 'sl-label';
+  const labelId = useId();
+  const urlId = useId();
+
   return (
     <div className={styles.form}>
       <div className={styles.field}>
@@ -55,10 +58,18 @@ export function SaveForm({
       />
 
       <div className={styles.field}>
-        <span className={styles.fieldLabel}>URL</span>
-        <div className={styles.urlPreview} title={previewUrl}>
-          {previewUrl}
-        </div>
+        <label htmlFor={urlId} className={styles.fieldLabel}>
+          URL
+        </label>
+        {/* Read-only: the URL is edited in the main view, shown here to confirm. */}
+        <textarea
+          id={urlId}
+          className={styles.urlArea}
+          value={previewUrl}
+          readOnly
+          spellCheck={false}
+          title={previewUrl}
+        />
       </div>
 
       <div className={styles.formActions}>

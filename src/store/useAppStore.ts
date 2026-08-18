@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { ParsedUrl, QueryParam, TabLoadState } from '@/types';
 import { createParam, isEditableUrl, parseUrl, serializeUrl, serializeUrlForNav } from '@/lib/urlParser';
-import { detectParamType } from '@/lib/paramTypes';
+import { detectParamType, flipBoolean } from '@/lib/paramTypes';
 
 interface AppState {
   /** Current tab loading state. Drives which screen we render. */
@@ -112,11 +112,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       currentParsed: {
         ...state.currentParsed,
-        params: state.currentParsed.params.map((p) => {
-          if (p.id !== id) return p;
-          const next = p.value.toLowerCase() === 'true' ? 'false' : 'true';
-          return { ...p, value: next };
-        }),
+        params: state.currentParsed.params.map((p) =>
+          p.id === id ? { ...p, value: flipBoolean(p.value) } : p,
+        ),
       },
     });
   },
